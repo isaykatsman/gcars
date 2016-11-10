@@ -1,6 +1,6 @@
-(* [Main] is the module responsible for maintenance of an internal
- * state and coordinating *)
-module type Main = sig
+(* Graphics is responsible for rendering cars 
+ * and the simulation environment *)
+module type Graphics = sig
   (* type for a car (genome) 
    * genome has 8 genes for vertices of car body, 1 gene for front wheel radius,
    * and 1 other gene for back wheel radius*)
@@ -10,11 +10,8 @@ module type Main = sig
 
   (* population type is simply a list of cars *)
   type population = car list
-
-  (* state type maintains population and some contants *)
-  type state = {pop:population; mutationrate: float; numcars: int}
   
-  (* initiate the simulation *)
-  val runsimulation : int -> population
+  (* draw the simulation *)
+  val drawsimulation : population -> ()
 
 end
