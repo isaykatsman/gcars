@@ -20,9 +20,14 @@ type population =
   | Population of car list
   | Empty of int
 
+type scores = float list
+
 (* [new_population p r] is a new population, calculated via a genertic
  * algorithm, given the results [r] of the previous population and the
  * and old population [p] itself. If population is Empty n, then an inital
  * population of size n *)
-val new_population : (pop : population) -> (results : float list) -> 
+val new_population : (pop : population) -> (pop_scores : scores) -> 
   (float : mutation_rate) -> (new_pop : population)
+
+val eval_pop : (pop : population) -> (eval_func : eval_function) -> 
+  (pop_scores : scores)
