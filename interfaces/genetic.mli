@@ -1,7 +1,7 @@
 (* type for a car (genome) 
  * genome has 8 genes for vertices of car body, 1 gene for front wheel radius,
  * and 1 other gene for back wheel radius *)
-type car = {
+type car_genome = {
   v1: float * float;
   v2: float * float;
   v3: float * float;
@@ -17,17 +17,13 @@ type car = {
 (* An existing population is represented by a Population type; an empty one
  * is represented by Empty n where n is the size of the desired population *)
 type population = 
-  | Population of car list
+  | Population of car_genome list
   | Empty of int
 
 type scores = float list
 
-(* [new_population p r] is a new population, calculated via a genertic
- * algorithm, given the results [r] of the previous population and the
- * and old population [p] itself. If population is Empty n, then an inital
- * population of size n *)
-val new_population : (pop : population) -> (pop_scores : scores) -> 
-  (float : mutation_rate) -> (new_pop : population)
-
-val eval_pop : (pop : population) -> (eval_func : eval_function) -> 
-  (pop_scores : scores)
+(* [new_population pop scores rate] is a new population, calculated via a genertic
+ * algorithm, given the scores [scores] of the previous population and the
+ * and old population [pop] itself. If population is Empty n, then an inital
+ * population of size n. The mutation rate is specified by [mutation_rate] *)
+val new_population : population -> scores -> float -> population
