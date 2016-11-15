@@ -16,5 +16,5 @@ val parse_opts : string array -> options
 
 (* Continually run the simulation, evaluating the current population,
  * generating a new population from the old one, and evaluating that as well *)
-val run : options -> population -> scores
+val run : options -> population -> scores -> ()
 
