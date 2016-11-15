@@ -17,4 +17,4 @@ val create_world : population -> world
 val step : world -> ()
 
 (* Get info about all the cars *)
-val get_car_info : world -> car_info
+val get_car_info : world -> car_info list
