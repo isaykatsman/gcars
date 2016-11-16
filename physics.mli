@@ -20,3 +20,6 @@ val step : world -> world
 
 (* Get info about all the cars *)
 val get_car_info : world -> car_info list
+
+(* Get the terrain to be drawn *)
+val get_terrain : world -> (float * float) list
