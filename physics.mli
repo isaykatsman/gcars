@@ -7,7 +7,9 @@ type world
 
 type car_info = {
   velocity : float;
-  dist_from_start : float;
+  x : float;
+  y : float;
+  rot : float;
 } 
 
 (* Creates a new world with the specified terrain and cars *)
