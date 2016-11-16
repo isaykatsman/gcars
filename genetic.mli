@@ -1,6 +1,7 @@
 (* type for a car (genome) 
- * genome has 8 genes for vertices of car body, 1 gene for front wheel radius,
- * and 1 other gene for back wheel radius *)
+ * genome has 8 genes for vertices of car body, and for each of the two wheels,
+ * one gene for radius and one for the number of the vertex it will be attached
+ * to *)
 type car_genome = {
   v1: float * float;
   v2: float * float;
@@ -10,8 +11,10 @@ type car_genome = {
   v6: float * float;
   v7: float * float;
   v8: float * float;
-  r1: float;
-  r2: float;
+  w1_radius: float;
+  w2_radius: float;
+  w1_vert: int;
+  w2_vert: int;
 }
  
 (* An existing population is represented by a Population type; an empty one
