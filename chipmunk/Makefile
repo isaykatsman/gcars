@@ -145,7 +145,7 @@ run-opt-demo: cp_ml_demo.opt
 
 # test
 test: chipmunk.cma
-	ocaml $(DEMO)
+	ocaml -I . $(DEMO)
 
 
 # manual install 
