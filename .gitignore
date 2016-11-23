@@ -1,0 +1,13 @@
+*.a
+*.cma
+*.cmi
+*.cmo
+*.cmx
+*.cmxa
+*.gen.ml
+chipmunk/chipmunk.ml
+chipmunk/chipmunk.mli
+*.o
+*.so
+*.exe
+*.gen.c
