@@ -1,17 +1,12 @@
 module type GeneticCarAlgo = sig
   (* type for a car (genome) 
-   * genome has 8 genes for vertices of car body, and for each of the two wheels,
+   * genome has 8 genes for vertices of car chassis, and for each of the two wheels,
    * one gene for radius and one for the number of the vertex it will be attached
-   * to *)
+   * to. The position of each vertex is expressed in polar coordinates, with
+   * the second float in the pair being the angle and the first being the
+   * radius *)
   type car_genome = {
-    v1: float * float;
-    v2: float * float;
-    v3: float * float;
-    v4: float * float;
-    v5: float * float;
-    v6: float * float;
-    v7: float * float;
-    v8: float * float;
+    chassis : (float * float) list;
     w1_radius: float;
     w2_radius: float;
     w1_vert: int;
