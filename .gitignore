@@ -11,3 +11,4 @@ chipmunk/chipmunk.mli
 *.so
 *.exe
 *.gen.c
+_build
