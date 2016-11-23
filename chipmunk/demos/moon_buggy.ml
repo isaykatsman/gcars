@@ -26,7 +26,6 @@
 #load "GL.cma"
 #load "Glu.cma"
 #load "Glut.cma"
-#load "chipmunk.cma"
 
 open GL
 open Glu
@@ -101,8 +100,6 @@ let active_bodies_li = ref [] ;;
 (* Chipmunk vectors *)
 let cpv x y = {cp_x=x; cp_y=y}
 let cpvzero = cpvzero()
-
-
 
 (* The init funtion is doing most of the work in this tutorial. We
    create a space and populate it with a bunch of interesting
