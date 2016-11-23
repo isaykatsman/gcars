@@ -1,12 +1,13 @@
-open Physics
+open World
+open Genetic
 
-module Graphics = sig
+module type Graphics = sig
   (* Initalize the graphics module *)
-  val init_graphics : world ref -> ()
+  val init_graphics : World.t ref -> car_genome list -> unit
 
   (* Draw the current state of the simulation. The car which is furthest from
    * the start should always be in view. *)
-  val draw : () -> ()
+  val draw : unit -> unit
 end
 
 module Graphics : Graphics
