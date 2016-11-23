@@ -31,6 +31,7 @@ open GL
 open Glu
 open Glut
 
+#load "chipmunk.cma"
 open Chipmunk
 open Low_level
 open OO
