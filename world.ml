@@ -35,10 +35,10 @@ module FakeWorld = struct
   let make pop =
     match pop with
     | Empty n -> 
-        (* let car1 = { velocity = 0.0; pos = Vect.origin; angle = 0.0 } in
+        let car1 = { velocity = 0.0; pos = Vect.origin; angle = 0.0 } in
         let car2 = { velocity = 0.0; pos = Vect.origin; angle = 0.0 } in
-        let car_states = [car1; car2] in *)
-        { cars = []; terrain = (make_terrain 50 [])}
+        let car_states = [car1; car2] in
+        { cars = car_states; terrain = (make_terrain 50 [])}
          
     | Population lst -> 
         failwith "FakeWorld.make can only take in an Empty population"

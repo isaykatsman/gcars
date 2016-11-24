@@ -12,7 +12,7 @@ module type World = sig
   type t
 
   (* Creates a new world with the specified terrain and cars *)
-  val create_world : population -> t
+  val make : population -> t
 
   (* Steps the physics simulation forward one timestep *)
   val step : t -> t
