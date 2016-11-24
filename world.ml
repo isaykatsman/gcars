@@ -27,10 +27,14 @@ module FakeWorld = struct
     else
     match acc with
     | [] -> make_terrain n [Vect.origin]
-    | lst -> 
+    | prev_v::t -> 
         let angle = (Random.float pi) -. (pi /. 2.0) in
         let v = Vect.rot (Vect.make 50.0 0.0) angle in
-        make_terrain (n - 1) (v::lst)
+        let v_new = Vect.add v prev_v in
+        let v1_str = Vect.to_string prev_v in
+        let v2_str = Vect.to_string v_new in
+        print_endline ("line from "^v1_str^" to "^v2_str);
+        make_terrain (n - 1) (v_new::prev_v::t)
 
   let make pop =
     match pop with
@@ -38,7 +42,7 @@ module FakeWorld = struct
         let car1 = { velocity = 0.0; pos = Vect.origin; angle = 0.0 } in
         let car2 = { velocity = 0.0; pos = Vect.origin; angle = 0.0 } in
         let car_states = [car1; car2] in
-        { cars = car_states; terrain = (make_terrain 50 [])}
+        { cars = car_states; terrain = (make_terrain 5 [])}
          
     | Population lst -> 
         failwith "FakeWorld.make can only take in an Empty population"
