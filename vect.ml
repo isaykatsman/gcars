@@ -20,5 +20,10 @@ module Vect = struct
   
   let x v = v.x
   let y v = v.y
+
+  let to_string v = 
+    let x = string_of_float v.x in
+    let y = string_of_float v.y in
+    ("("^x^", "^y^")")
 end
 

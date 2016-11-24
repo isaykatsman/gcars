@@ -26,7 +26,7 @@ module FakeWorld = struct
     if n = 0 then acc
     else
     match acc with
-    | [] -> [Vect.origin]
+    | [] -> make_terrain n [Vect.origin]
     | lst -> 
         let angle = (Random.float pi) -. (pi /. 2.0) in
         let v = Vect.rot (Vect.make 50.0 0.0) angle in
