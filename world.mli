@@ -1,27 +1,27 @@
 open Genetic
 open Vect
 
-module World = sig
-  (* Abstract type to represent the world *)
-  type world
+type car_state = {
+  velocity : float;
+  pos : Vect.t;
+  angle : float; (* in radians *)
+} 
 
-  type car_state = {
-    velocity : float;
-    pos : Vect.t;
-    angle : float; (* in radians *)
-  } 
+module type World = sig
+  (* Abstract type to represent the world *)
+  type t
 
   (* Creates a new world with the specified terrain and cars *)
-  val create_world : population -> world
+  val create_world : population -> t
 
   (* Steps the physics simulation forward one timestep *)
-  val step : world -> world
+  val step : t -> t
 
   (* Get state info about all the cars *)
-  val get_car_state : world -> car_state list
+  val get_car_state : t -> car_state list
 
   (* Get the terrain to be drawn *)
-  val get_terrain : world -> Vect.t list
+  val get_terrain : t -> Vect.t list
 end
 
 module World : World
