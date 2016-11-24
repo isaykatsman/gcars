@@ -68,6 +68,7 @@ module Graphics = struct
 
   (* Actually draw the world. Requires that get_car_info world is not [] *)
   let draw_gl world = 
+    print_endline "In draw_gl";
     let cars = World.get_car_state !world in
 
     (* Move the furthest along car into view *)
@@ -84,6 +85,8 @@ module Graphics = struct
     List.iter draw_car cars;
     let terrain = World.get_terrain !world in
     draw_polyline terrain Vect.origin 0.0;
+    glutSwapBuffers();
+    print_endline "Exiting draw_gl";
   ;;
 
   let init_gl world = 
@@ -119,6 +122,12 @@ module Graphics = struct
     (* Register the display callback *)
     glutDisplayFunc ~display:(fun () -> draw_gl world);
   ;;
+  
+  let sleep_ticks = 16
+  let rec timer ~value =
+    glutTimerFunc ~msecs:sleep_ticks ~timer ~value:0;
+    glutPostRedisplay();
+  ;;
 
   (* Initalize the graphics module *)
   let init_graphics world cars =
@@ -127,12 +136,19 @@ module Graphics = struct
 
     (* Cache the verticies we will have to draw for the cars *)
     init_cars_cache cars;
+    
+    print_endline "Entering main loop";
+
+    glutTimerFunc ~msecs:sleep_ticks ~timer ~value:0;
 
     glutMainLoop ();
   ;;
 
   (* Request that OpenGL re-draw the world*)
-  let draw () = glutPostRedisplay ();
+  let draw () = 
+    print_endline "draw called";
+    glutPostRedisplay ();
+  ;;
 
 end
 
