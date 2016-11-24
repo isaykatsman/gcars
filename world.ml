@@ -1,6 +1,21 @@
-open Chipmunk
-open OO
+(* open Chipmunk
+open OO *)
+open Vect
+open Genetic
 
+type car_state = {
+  velocity : float;
+  pos : Vect.t;
+  angle : float; (* in radians *)
+}
+
+module type World = sig
+  type t
+  val make : population -> t
+  val step : t -> t
+  val get_car_state : t -> car_state list
+  val get_terrain : t -> Vect.t list
+end
 
 module FakeWorld = struct
   type t = { cars : car_state list; terrain : Vect.t list }
@@ -11,22 +26,26 @@ module FakeWorld = struct
     if n = 0 then acc
     else
     match acc with
-    | [] -> Vect.origin  
+    | [] -> [Vect.origin]
     | lst -> 
-        let angle = (Random.float pi) -. (pi/2) in
-        let v = Vect.rot (Vect.make 50.0 0) angle in
-        v::lst
+        let angle = (Random.float pi) -. (pi /. 2.0) in
+        let v = Vect.rot (Vect.make 50.0 0.0) angle in
+        make_terrain (n - 1) (v::lst)
 
-  let create_world pop =
-    match population with
+  let make pop =
+    match pop with
     | Empty n -> 
         (* let car1 = { velocity = 0.0; pos = Vect.origin; angle = 0.0 } in
         let car2 = { velocity = 0.0; pos = Vect.origin; angle = 0.0 } in
         let car_states = [car1; car2] in *)
-        { cars = []; terrain = make_terrain 50 }
+        { cars = []; terrain = (make_terrain 50 [])}
          
     | Population lst -> 
         failwith "FakeWorld.make can only take in an Empty population"
+
+  let get_terrain t = t.terrain
+  let get_car_state t = t.cars
+  let step world = world
 end
 
 module World = FakeWorld
