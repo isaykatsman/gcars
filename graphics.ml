@@ -15,7 +15,7 @@ module type Graphics = sig
 end
 
 module Graphics = struct
-  let cars_cache = ref []
+  type cached_car = { verts : Vect.t list; genome : car_genome }
 
   let polar_to_vect (r, theta) =
     let x = r *. cos(theta) in
@@ -27,14 +27,16 @@ module Graphics = struct
     | [] -> acc
     | h::t -> get_chassis_verts t ((polar_to_vect h)::acc)
   
-  let rec init_cars_cache cars =
+  let rec init_cars_cache cars acc : cached_car list =
     match cars with
-    | [] -> ()
+    | [] -> acc
     | curr::next ->
         let verts = get_chassis_verts curr.chassis [] in
         let first_vert = polar_to_vect (List.hd curr.chassis) in
-        cars_cache := (!cars_cache)@(first_vert::verts);
-        init_cars_cache next
+        let verts = (first_vert::verts) in
+        let car_genome = curr in
+        let new_acc = acc@[{genome = car_genome; verts = verts}] in 
+        init_cars_cache next new_acc
 
   let draw_line v1 v2 = 
     let v1_str = Vect.to_string v1 in
@@ -56,25 +58,28 @@ module Graphics = struct
         get_furthest_car t new_furthest
 
   let rec draw_polyline (verts : Vect.t list) (prev_vert : Vect.t) (angle :
-    float) = 
+    float) (pos : Vect.t) = 
     match verts with
     | [] -> ()
     | curr_vert::next_verts ->
         let curr_rot = 
           if angle = 0.0 then curr_vert 
           else Vect.rot curr_vert angle in
-        draw_line prev_vert curr_rot;
-        draw_polyline next_verts curr_rot angle
+        let curr_disp = 
+          if pos = Vect.origin then curr_rot
+          else Vect.add curr_rot pos in
+        draw_line prev_vert curr_disp;
+        draw_polyline next_verts curr_disp angle pos
   ;;
     
-  let draw_car car = ()
+  let draw_cars cars car_states = ()
 
   (* Actually draw the world. Requires that get_car_info world is not [] *)
-  let draw_gl world = 
-    let cars = World.get_car_state !world in
+  let draw_gl world cars_cache = 
+    let car_states = World.get_car_state !world in
 
     (* Move the furthest along car into view *)
-    let furthest = get_furthest_car cars (List.hd cars) in
+    let furthest = get_furthest_car car_states (List.hd car_states) in
 
     glClear [GL_COLOR_BUFFER_BIT];
     glLoadIdentity();
@@ -84,13 +89,14 @@ module Graphics = struct
     
     (* Draw the cars and terrain *)
     glColor3 0.0 0.0 0.0;
-    List.iter draw_car cars;
+    draw_cars cars_cache;
     let terrain = World.get_terrain !world in
-    draw_polyline (List.tl terrain) (List.hd terrain) 0.0;
+    draw_polyline (List.tl terrain) (List.hd terrain) 0.0 (Vect.origin);
+
     glutSwapBuffers();
   ;;
 
-  let init_gl world = 
+  let init_gl world cars = 
     (* TODO: Not sure if Sys.argv is needed *)
     ignore(glutInit Sys.argv);
 
@@ -111,7 +117,7 @@ module Graphics = struct
     glBlendFunc GL_SRC_ALPHA  GL_ONE_MINUS_SRC_ALPHA;
     glHint GL_LINE_SMOOTH_HINT  GL_DONT_CARE;
     glHint GL_POINT_SMOOTH_HINT  GL_DONT_CARE;
-    glLineWidth 1.5;
+    glLineWidth 3.0;
     
     (* Magic *)
     glMatrixMode GL_PROJECTION;
@@ -120,8 +126,10 @@ module Graphics = struct
     glScale 2.0 2.0 1.0;
     glMatrixMode GL_MODELVIEW;
 
+    let cache = init_cars_cache cars [] in 
+
     (* Register the display callback *)
-    glutDisplayFunc ~display:(fun () -> draw_gl world);
+    glutDisplayFunc ~display:(fun () -> draw_gl world cache);
   ;;
   
   let sleep_ticks = 16
@@ -133,10 +141,9 @@ module Graphics = struct
   (* Initalize the graphics module *)
   let init_graphics world cars =
     (* Initialize Open GL *)
-    init_gl world; 
+    init_gl world cars; 
 
     (* Cache the verticies we will have to draw for the cars *)
-    init_cars_cache cars;
     
     glutTimerFunc ~msecs:sleep_ticks ~timer ~value:0;
 
