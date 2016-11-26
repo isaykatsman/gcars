@@ -12,13 +12,14 @@ let rec make_chassis n acc =
     let radius = (Random.float 100.0) +. 100.0 in 
     make_chassis (n-1) ((radius, angle)::acc)
   else
-    acc
+    let chassis = List.sort (fun x y -> compare (snd x) (snd y)) acc in 
+    chassis
   
 let car1 = {
-  chassis = make_chassis 10 [];
+  chassis = make_chassis 8 [];
   wheels = (
-    {radius=20.0; vert = 1 },
-    {radius=20.0; vert = 2 }
+    {radius=50.0; vert = 1 },
+    {radius=50.0; vert = 2 }
   )
 }
    

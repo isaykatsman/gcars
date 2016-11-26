@@ -31,8 +31,9 @@ module Graphics = struct
     match cars with
     | [] -> acc
     | curr::next ->
-        let chassis = List.sort (fun x y -> compare (snd x) (snd y))
-        curr.chassis in 
+        (* let chassis = List.sort (fun x y -> compare (snd x) (snd y))
+        curr.chassis in *)
+        let chassis = curr.chassis in
         let verts = get_chassis_verts chassis [] in
         let first_vert = polar_to_vect (List.hd chassis) in
         let verts_new = (first_vert::verts) in 
@@ -97,6 +98,8 @@ module Graphics = struct
         glVertex2 (r *. cos(rads +. a) +. x)
                   (r *. sin(rads +. a) +. y);
       done;
+      glVertex2 (r *. cos(a) +. x)
+                (r *. sin(a) +. y);
       glVertex2 x y;
     glEnd();
   ;;
@@ -104,7 +107,8 @@ module Graphics = struct
   let draw_wheels car state = 
     let wheel_pos w =
       let pair = List.nth car.genome.chassis w.vert in
-      match pair with | (x, y) -> Vect.make x y in
+      let vect = polar_to_vect pair in
+      Vect.add (Vect.rot vect state.angle) state.pos in
     match (car.genome.wheels, state.wheel_angles) with
     | ((w1, w2), (w1_angle, w2_angle)) -> 
         draw_wheel (wheel_pos w1) w1.radius w1_angle;
@@ -113,7 +117,7 @@ module Graphics = struct
     
   let draw_car car state =
     draw_polyline car.verts state.angle state.pos;
-    (* draw_wheels car state; *)
+    draw_wheels car state;
 
   exception Car_cache_length
   let rec draw_cars cache states =
@@ -183,7 +187,7 @@ module Graphics = struct
     glutDisplayFunc ~display:(fun () -> draw_gl world cache);
   ;;
   
-  let sleep_ticks = 1000
+  let sleep_ticks = 16
   let rec timer ~value =
     glutTimerFunc ~msecs:sleep_ticks ~timer ~value:0;
     glutPostRedisplay();

@@ -43,11 +43,11 @@ module FakeWorld = struct
         let car1 = { 
           velocity = 0.0; 
           pos = Vect.make 0.0 0.0; 
-          angle = 0.0;
-          wheel_angles = (0.0, 0.0)
+          angle = 1.0;
+          wheel_angles = (1.0, 2.0)
         } in
-        let car2 = {car1 with pos = Vect.make 100.0 100.0} in 
-        let car3 = {car1 with pos = Vect.make 200.0 300.0} in 
+        let car2 = {car1 with pos = Vect.make 300.0 300.0} in 
+        let car3 = {car1 with pos = Vect.make 1000.0 1000.0} in 
         let car_states = [car2; car1] in
         { cars = car_states; terrain = (make_terrain 5 [])}
          
