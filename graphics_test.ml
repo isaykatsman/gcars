@@ -6,13 +6,16 @@ open World
 let pi = 3.14159265359
 
 let world = World.make (Empty 0)
+let rec make_chassis n acc = 
+  if n > 0 then
+    let angle = Random.float (2.0 *. pi) in
+    let radius = (Random.float 100.0) +. 100.0 in 
+    make_chassis (n-1) ((radius, angle)::acc)
+  else
+    acc
+  
 let car1 = {
-  chassis = [
-    (50.0, 7.0 *. (pi /. 4.0)); 
-    (50.0, 5.0 *. (pi /. 4.0)); 
-    (50.0, 3.0 *. (pi /. 4.0)); 
-    (50.0, 1.0 *. (pi /. 4.0))
-  ];
+  chassis = make_chassis 10 [];
   wheels = (
     {radius=20.0; vert = 1 },
     {radius=20.0; vert = 2 }
