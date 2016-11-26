@@ -5,6 +5,7 @@ type car_state = {
   velocity : float;
   pos : Vect.t;
   angle : float; (* in radians *)
+  wheel_angles : float * float;
 } 
 
 module type World = sig

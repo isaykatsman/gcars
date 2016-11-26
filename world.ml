@@ -7,6 +7,7 @@ type car_state = {
   velocity : float;
   pos : Vect.t;
   angle : float; (* in radians *)
+  wheel_angles : float * float;
 }
 
 module type World = sig
@@ -39,9 +40,15 @@ module FakeWorld = struct
   let make pop =
     match pop with
     | Empty n -> 
-        let car1 = { velocity = 0.0; pos = Vect.origin; angle = 0.0 } in
-        let car2 = { velocity = 0.0; pos = Vect.origin; angle = 0.0 } in
-        let car_states = [car1; car2] in
+        let car1 = { 
+          velocity = 0.0; 
+          pos = Vect.make 0.0 0.0; 
+          angle = 0.0;
+          wheel_angles = (0.0, 0.0)
+        } in
+        let car2 = {car1 with pos = Vect.make 100.0 100.0} in 
+        let car3 = {car1 with pos = Vect.make 200.0 300.0} in 
+        let car_states = [car2; car1] in
         { cars = car_states; terrain = (make_terrain 5 [])}
          
     | Population lst -> 

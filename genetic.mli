@@ -3,13 +3,13 @@
  * one gene for radius and one for the number of the vertex it will be attached
  * to. The position of each vertex is expressed in polar coordinates, with
  * the second float in the pair being the angle and the first being the
- * radius *)
+ * radius. The car should always have 2 wheels. The vert record field refers to
+ * the index of the chassis vertex to attach the wheel to. *)
+type wheel = {radius : float; vert : int}
+
 type car_genome = {
   chassis : (float * float) list;
-  w1_radius: float;
-  w2_radius: float;
-  w1_vert: int;
-  w2_vert: int;
+  wheels : wheel * wheel;
 }
  
 (* An existing population is represented by a Population type; an empty one

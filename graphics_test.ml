@@ -7,11 +7,16 @@ let pi = 3.14159265359
 
 let world = World.make (Empty 0)
 let car1 = {
-  chassis = [(10.0, 0.0); (10.0, (pi /. 2.0)); (10.0, pi); (10.0, 3.0 *. (pi /. 2.0))];
-  w1_radius = 10.0;
-  w2_radius = 10.0;
-  w1_vert = 0;
-  w2_vert = 1;
+  chassis = [
+    (50.0, 7.0 *. (pi /. 4.0)); 
+    (50.0, 5.0 *. (pi /. 4.0)); 
+    (50.0, 3.0 *. (pi /. 4.0)); 
+    (50.0, 1.0 *. (pi /. 4.0))
+  ];
+  wheels = (
+    {radius=20.0; vert = 1 },
+    {radius=20.0; vert = 2 }
+  )
 }
    
 let () = print_endline "going to init"
