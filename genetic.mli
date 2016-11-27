@@ -1,12 +1,17 @@
-(* type for a car (genome) 
- * genome has 8 genes for vertices of car chassis, and for each of the two wheels,
- * one gene for radius and one for the number of the vertex it will be attached
- * to. The position of each vertex is expressed in polar coordinates, with
- * the second float in the pair being the angle and the first being the
- * radius. The car should always have 2 wheels. The vert record field refers to
+(* The vert record field refers to
  * the index of the chassis vertex to attach the wheel to. *)
 type wheel = {radius : float; vert : int}
 
+(* type for a car (genome) 
+ * genome has 8 genes for vertices of car chassis, and for each of the two wheels,
+ * one gene for radius and one for the number of the vertex it will be attached
+ * to. 
+ * The position of each vertex is expressed in polar coordinates, with
+ * the second float in the pair being the angle and the first being the
+ * radius. 
+ * These verticies should be sorted in order of increasing angle.
+ * The car should always have 2 wheels. 
+ *)
 type car_genome = {
   chassis : (float * float) list;
   wheels : wheel * wheel;

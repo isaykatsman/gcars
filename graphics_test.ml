@@ -23,15 +23,11 @@ let car1 = {
   )
 }
    
-let () = print_endline "going to init"
 let () = Graphics.init_graphics (ref world) [car1; car1]
-let () = print_endline "Init done"
 
 let rec run () = 
-  print_endline "running";
   (* sleepf 0.03333; *)
   run ()
 
 let () = run ()
-let () = print_endline "done"
 

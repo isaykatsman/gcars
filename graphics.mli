@@ -2,12 +2,18 @@ open World
 open Genetic
 
 module type Graphics = sig
+  (* Type of graphics data *)
+  type t
+
   (* Initalize the graphics module *)
-  val init_graphics : World.t ref -> car_genome list -> unit
+  val init : unit -> unit
+
+  (* Initalizes a new population *)
+  val make : population -> t
 
   (* Draw the current state of the simulation. The car which is furthest from
    * the start should always be in view. *)
-  val draw : unit -> unit
+  val draw : t -> World.t -> unit
 end
 
 module Graphics : Graphics

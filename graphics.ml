@@ -10,12 +10,16 @@ open Vect
 open Genetic
 
 module type Graphics = sig
-  val init_graphics : World.t ref -> car_genome list -> unit
-  val draw : unit -> unit
+  type t
+  val init : unit -> unit
+  val make : population -> t
+  val draw : t -> World.t -> unit
 end
 
 module Graphics = struct
-  type cached_car = { verts : Vect.t list; genome : car_genome }
+  type precomputed_car = { verts : Vect.t list; genome : car_genome }
+
+  type t = { precomputed_cars : precomputed_car list } 
 
   let polar_to_vect (r, theta) =
     let x = r *. cos(theta) in
@@ -26,8 +30,8 @@ module Graphics = struct
     match chassis with
     | [] -> acc
     | h::t -> get_chassis_verts t ((polar_to_vect h)::acc)
-  
-  let rec init_cars_cache cars acc : cached_car list =
+ 
+  let rec init_precomputed_cars cars acc : precomputed_car list =
     match cars with
     | [] -> acc
     | curr::next ->
@@ -39,13 +43,10 @@ module Graphics = struct
         let verts_new = (first_vert::verts) in 
         let car_genome = curr in 
         let new_acc = acc@[{genome = car_genome; verts = verts_new}] in 
-        init_cars_cache next new_acc
+        init_precomputed_cars next new_acc
 
-  let count = ref true
-  let color = ref 0.0
   let draw_line v1 v2 = let v1_str = Vect.to_string v1 in
     let v2_str = Vect.to_string v2 in
-    print_endline ("drawing line from "^v1_str^" to "^v2_str); 
     glBegin GL_LINES;
       glVertex2 (Vect.x v1) (Vect.y v1);
       glVertex2 (Vect.x v2) (Vect.y v2);
@@ -77,8 +78,6 @@ module Graphics = struct
   ;;
 
   let draw_polyline verts angle pos = 
-    let () = if !count then glColor3 1.0 0.0 0.0 else glColor3 0.0 0.0 1.0 in
-    count := not !count;
     match verts with
     | [] -> print_endline "Call to draw_polyline with verts list of length 0";
     | [v] -> print_endline "Call to draw_polyline with verts list of length 1";
@@ -89,7 +88,7 @@ module Graphics = struct
   let draw_wheel pos r a = 
     let x = (Vect.x pos) in
     let y = (Vect.y pos) in 
-    let segs = 15 in
+    let segs = 30 in
     let coef = 2.0 *. pi /. (float segs) in
 
     glBegin GL_LINE_LOOP;
@@ -119,18 +118,18 @@ module Graphics = struct
     draw_polyline car.verts state.angle state.pos;
     draw_wheels car state;
 
-  exception Car_cache_length
-  let rec draw_cars cache states =
-    match (cache, states) with
+  exception Cars_precomputed_length
+  let rec draw_cars precomp states =
+    match (precomp, states) with
     | ([], []) -> ()
-    | (cache_entry::cache_tl, state::states_tl) -> 
-        draw_car cache_entry state;
-        draw_cars cache_tl states_tl
-    | (_, _) -> raise Car_cache_length
+    | (precomp_entry::precomp_tl, state::states_tl) -> 
+        draw_car precomp_entry state;
+        draw_cars precomp_tl states_tl
+    | (_, _) -> raise Cars_precomputed_length
 
   (* Actually draw the world. Requires that get_car_info world is not [] *)
-  let draw_gl world cars_cache = 
-    let car_states = World.get_car_state !world in
+  let draw graphics world = 
+    let car_states = World.get_car_state world in
 
     (* Move the furthest along car into view *)
     let furthest = get_furthest_car car_states (List.hd car_states) in
@@ -143,15 +142,14 @@ module Graphics = struct
     
     (* Draw the cars and terrain *)
     glColor3 0.0 0.0 0.0;
-    count := true;
-    draw_cars cars_cache car_states;
-    let terrain = World.get_terrain !world in
+    draw_cars graphics.precomputed_cars car_states;
+    let terrain = World.get_terrain world in
     draw_polyline terrain 0.0 (Vect.origin);
 
     glutSwapBuffers();
   ;;
 
-  let init_gl world cars = 
+  let init () = 
     (* TODO: Not sure if Sys.argv is needed *)
     ignore(glutInit Sys.argv);
 
@@ -168,8 +166,8 @@ module Graphics = struct
     (* Pretty smoothing effects *)
     glEnable GL_LINE_SMOOTH;
     glEnable GL_POINT_SMOOTH;
-    glEnable GL_BLEND;
-    glBlendFunc GL_SRC_ALPHA  GL_ONE_MINUS_SRC_ALPHA;
+    glEnable GL_BLEND; 
+    glBlendFunc GL_SRC_ALPHA  GL_ONE_MINUS_SRC_ALPHA; 
     glHint GL_LINE_SMOOTH_HINT  GL_DONT_CARE;
     glHint GL_POINT_SMOOTH_HINT  GL_DONT_CARE;
     glLineWidth 1.5;
@@ -180,11 +178,6 @@ module Graphics = struct
     glOrtho (-1000.0) (1000.0) (-750.0) (750.0) (-1.0) (1.0);
     glScale 2.0 2.0 1.0;
     glMatrixMode GL_MODELVIEW;
-
-    let cache = init_cars_cache cars [] in 
-
-    (* Register the display callback *)
-    glutDisplayFunc ~display:(fun () -> draw_gl world cache);
   ;;
   
   let sleep_ticks = 16
@@ -192,23 +185,10 @@ module Graphics = struct
     glutTimerFunc ~msecs:sleep_ticks ~timer ~value:0;
     glutPostRedisplay();
   ;;
-
-  (* Initalize the graphics module *)
-  let init_graphics world cars =
-    (* Initialize Open GL *)
-    init_gl world cars; 
-
-    (* Cache the verticies we will have to draw for the cars *)
-    
-    glutTimerFunc ~msecs:sleep_ticks ~timer ~value:0;
-
-    glutMainLoop ();
-  ;;
-
-  (* Request that OpenGL re-draw the world*)
-  let draw () = 
-    glutPostRedisplay ();
-  ;;
-
+  
+  let make pop : t = 
+    match pop with
+    | Empty n -> { precomputed_cars = [] }
+    | Population lst -> { precomputed_cars = (init_precomputed_cars lst []) }
 end
 

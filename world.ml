@@ -34,25 +34,27 @@ module FakeWorld = struct
         let v_new = Vect.add v prev_v in
         let v1_str = Vect.to_string prev_v in
         let v2_str = Vect.to_string v_new in
-        print_endline ("line from "^v1_str^" to "^v2_str);
         make_terrain (n - 1) (v_new::prev_v::t)
 
+
+  let initial_state () = { 
+    velocity = Random.float 1.0; 
+    pos = Vect.make 0.0 0.0; 
+    angle = 0.0;
+    wheel_angles = (1.0, 2.0)
+  }
+
+  let make_states n acc =
+    if n = 0 then acc 
+    else (initial_state ())::acc
+
   let make pop =
-    match pop with
-    | Empty n -> 
-        let car1 = { 
-          velocity = 0.0; 
-          pos = Vect.make 0.0 0.0; 
-          angle = 1.0;
-          wheel_angles = (1.0, 2.0)
-        } in
-        let car2 = {car1 with pos = Vect.make 300.0 300.0} in 
-        let car3 = {car1 with pos = Vect.make 1000.0 1000.0} in 
-        let car_states = [car2; car1] in
-        { cars = car_states; terrain = (make_terrain 5 [])}
-         
-    | Population lst -> 
-        failwith "FakeWorld.make can only take in an Empty population"
+    let size = 
+      match pop with
+      | Empty n -> n
+      | Population lst -> List.length lst in
+    let car_states = make_states size [] in
+    { cars = car_states; terrain = (make_terrain 20 [])}
 
   let get_terrain t = t.terrain
   let get_car_state t = t.cars
