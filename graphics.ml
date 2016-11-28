@@ -18,6 +18,12 @@ module Graphics = struct
 
   type t = { precomputed_cars : precomputed_car list } 
 
+  let window_width = 640
+  let window_height = 700
+  let world_height = 480
+  let hud_height = window_height - world_height
+  let graph_width = window_width / 2
+
   let polar_to_vect (r, theta) =
     let x = r *. cos(theta) in
     let y = r *. sin(theta) in
@@ -142,6 +148,21 @@ module Graphics = struct
     let terrain = World.get_terrain world in
     draw_polyline terrain 0.0 (Vect.origin);
 
+    (* Draw the HUD. Coords relative to center of frame. *)
+    glColor3 1.0 0.0 0.0;
+    glBegin GL_POINTS;
+      glVertex2 furthest_x furthest_y;
+    glEnd ();
+    let hud_x = furthest_x -. ((float_of_int window_width) /. 2.0) in
+    let hud_y = furthest_y -. ((float_of_int window_height) /. 2.0) in
+    glColor3 0.0 0.0 1.0;
+    glBegin GL_POINTS;
+      glVertex2 furthest_x hud_y;
+    glEnd ();
+    (*glRect ~x1:hud_x ~y1:hud_y
+           ~x2:(hud_x +. (float_of_int window_width))
+           ~y2:(hud_y +. (float_of_int hud_height)); *)
+
     glutSwapBuffers();
   ;;
 
@@ -155,7 +176,7 @@ module Graphics = struct
 
     glutInitDisplayMode [GLUT_DOUBLE; GLUT_RGBA];
 
-    glutInitWindowSize 640 480;
+    glutInitWindowSize window_width window_height;
     ignore(glutCreateWindow "Genetic Cars");
     
     (* Set white as the "clear" color *)
@@ -175,8 +196,11 @@ module Graphics = struct
     (* Set the projection matrix *)
     glMatrixMode GL_PROJECTION;
     glLoadIdentity ();
-    glOrtho (-1000.0) (1000.0) (-750.0) (750.0) (-1.0) (1.0);
-    glScale 2.0 2.0 1.0;
+    glOrtho ((float_of_int window_width) /. -2.0) 
+            ((float_of_int window_width) /. 2.0) 
+            ((float_of_int window_height) /. -2.0) 
+            ((float_of_int window_height) /. 2.0) 
+            (-1.0) (1.0);
     glMatrixMode GL_MODELVIEW;
   ;;
   

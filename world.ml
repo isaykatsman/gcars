@@ -31,7 +31,7 @@ module FakeWorld = struct
     | [] -> make_terrain n [Vect.origin]
     | prev_v::t -> 
         let angle = (Random.float pi) -. (pi /. 2.0) in
-        let v = Vect.rot (Vect.make 100.0 0.0) angle in
+        let v = Vect.rot (Vect.make 50.0 0.0) angle in
         let v_new = Vect.add v prev_v in
         let v1_str = Vect.to_string prev_v in
         let v2_str = Vect.to_string v_new in
