@@ -140,7 +140,8 @@ module Graphics = struct
     glLoadIdentity();
     let furthest_x = (Vect.x furthest.pos) in
     let furthest_y = (Vect.y furthest.pos) in 
-    glTranslate (-. furthest_x) (-. furthest_y) 0.0;
+    let camera_y = furthest_y -. ((float_of_int hud_height) /. 2.0) in
+    glTranslate (-. furthest_x) (-. camera_y) 0.0;
     
     (* Draw the cars and terrain *)
     glColor3 0.0 0.0 0.0;
@@ -150,18 +151,13 @@ module Graphics = struct
 
     (* Draw the HUD. Coords relative to center of frame. *)
     glColor3 1.0 0.0 0.0;
-    glBegin GL_POINTS;
-      glVertex2 furthest_x furthest_y;
-    glEnd ();
     let hud_x = furthest_x -. ((float_of_int window_width) /. 2.0) in
-    let hud_y = furthest_y -. ((float_of_int window_height) /. 2.0) in
+    let hud_y = furthest_y -. ((float_of_int window_height) /. 2.0) 
+                -. ((float_of_int hud_height) /. 2.0)  in
     glColor3 0.0 0.0 1.0;
-    glBegin GL_POINTS;
-      glVertex2 furthest_x hud_y;
-    glEnd ();
-    (*glRect ~x1:hud_x ~y1:hud_y
+    glRect ~x1:hud_x ~y1:hud_y
            ~x2:(hud_x +. (float_of_int window_width))
-           ~y2:(hud_y +. (float_of_int hud_height)); *)
+           ~y2:(hud_y +. (float_of_int hud_height));
 
     glutSwapBuffers();
   ;;
