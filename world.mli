@@ -12,8 +12,11 @@ module type World = sig
   (* Abstract type to represent the world *)
   type t
 
-  (* Creates a new world with the specified terrain and cars *)
+  (* Creates a new world with new terrain and the specified cars *)
   val make : population -> t
+
+  (* Creates a new world with the specified terrain and cars *)
+  val with_terrain : (Vect.t list) -> population -> t
 
   (* Steps the physics simulation forward one timestep *)
   val step : t -> t

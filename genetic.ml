@@ -1,6 +1,5 @@
 type wheel = {radius : float; vert : int}
 
-
 type car_genome = {
   chassis : (float * float) list;
   wheels : (wheel * wheel);

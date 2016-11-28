@@ -13,6 +13,7 @@ type car_state = {
 module type World = sig
   type t
   val make : population -> t
+  val with_terrain : (Vect.t list) -> population -> t
   val step : t -> t
   val get_car_state : t -> car_state list
   val get_terrain : t -> Vect.t list
@@ -47,13 +48,17 @@ module FakeWorld = struct
       } in
       make_states (n-1) (car::acc)
 
-  let make pop =
+  let with_terrain terr pop = 
     let size = 
       match pop with
       | Empty n -> n
       | Population lst -> List.length lst in
     let car_states = make_states size [] in
-    { cars = car_states; terrain = (make_terrain 100 []) }
+    { cars = car_states; terrain = terr }
+
+  let make pop =
+    let terr = make_terrain 100 [] in
+    with_terrain terr pop
 
   let get_terrain t = t.terrain
   let get_car_state t = t.cars

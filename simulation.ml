@@ -22,8 +22,7 @@ module type Simulation = sig
   val run : t -> unit
 end
 
-
-module Simulation = struct
+module FakeSimulation = struct
   type t = {
     pop : population;
     world : World.t;
@@ -43,10 +42,15 @@ module Simulation = struct
       graphics = Graphics.make pop;
       opts = opts }
 
-
+  let counter = ref 0
   (* This function will check if the evaluation of a generation is done (all
    * cars not making progress *)
-  let generation_done sim = false
+  let generation_done sim = 
+    counter := !counter + 1;
+    if (!counter mod 300) = 0 then
+      true
+    else
+      false
   
   (* Score the generation *)
   let score_gen sim = []
@@ -61,7 +65,8 @@ module Simulation = struct
         let new_pop = Genetic.new_population sim.pop scores
           sim.opts.mutation_rate in
         let new_graphics = Graphics.make new_pop in
-        let new_world = World.make new_pop in
+        let terr = World.get_terrain sim.world in
+        let new_world = World.with_terrain terr new_pop in
         { sim with pop = new_pop; graphics = new_graphics; world = new_world }
       else
         let new_world = World.step sim.world in
@@ -89,3 +94,5 @@ module Simulation = struct
     glutMainLoop ();
   ;;
 end
+
+module Simulation = FakeSimulation
