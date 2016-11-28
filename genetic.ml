@@ -38,9 +38,9 @@ module FakeGenetic = struct
       )
     }
 
-  let make_cars n acc =
+  let rec make_cars n acc =
     if n = 0 then acc 
-    else (make_car ())::acc
+    else make_cars (n - 1) ((make_car ())::acc)
 
   let new_population pop scores rate = 
     let size = 

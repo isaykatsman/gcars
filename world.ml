@@ -36,17 +36,16 @@ module FakeWorld = struct
         let v2_str = Vect.to_string v_new in
         make_terrain (n - 1) (v_new::prev_v::t)
 
-
-  let initial_state () = { 
-    velocity = Random.float 1.0; 
-    pos = Vect.make 0.0 0.0; 
-    angle = 0.0;
-    wheel_angles = (1.0, 2.0)
-  }
-
-  let make_states n acc =
+  let rec make_states n acc =
     if n = 0 then acc 
-    else (initial_state ())::acc
+    else 
+      let car = { 
+        velocity = Random.float 10.0; 
+        pos = Vect.make 0.0 0.0; 
+        angle = 0.0;
+        wheel_angles = (1.0, 2.0)
+      } in
+      make_states (n-1) (car::acc)
 
   let make pop =
     let size = 
@@ -54,11 +53,25 @@ module FakeWorld = struct
       | Empty n -> n
       | Population lst -> List.length lst in
     let car_states = make_states size [] in
-    { cars = car_states; terrain = (make_terrain 20 [])}
+    { cars = car_states; terrain = (make_terrain 100 []) }
 
   let get_terrain t = t.terrain
   let get_car_state t = t.cars
-  let step world = world
+
+  let step_car car_state =
+    let vel = car_state.velocity in
+    let dx = Vect.make vel 0.0 in
+    let new_pos = Vect.add car_state.pos dx in
+    print_endline (string_of_float vel);
+    let new_wheel_angles = 
+      match car_state.wheel_angles with
+      | (a1, a2) -> (a1 +. 0.5, a2 +. 0.5) in
+    { car_state with pos = new_pos; angle = (car_state.angle +. 0.05);
+      wheel_angles = new_wheel_angles }
+
+  let step world = 
+    let new_states = List.map step_car world.cars in
+    { world with cars = new_states }
 end
 
 module World = FakeWorld

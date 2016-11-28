@@ -69,6 +69,13 @@ module Simulation = struct
         { sim with world = new_world } in
 
       sim_ref := new_sim;
+
+      (* let pop = Empty 0 in 
+      let _new_sim = { pop = pop; world = World.make pop; 
+        graphics = Graphics.make pop;
+        opts = sim.opts } in
+    
+      sim_ref := _new_sim *)
   ;;
 
   let run sim = 
@@ -76,7 +83,8 @@ module Simulation = struct
     Graphics.init ();
 
     (* Register the display callback *)
-    glutDisplayFunc ~display:(fun x -> step (ref sim) );
+    let sim_ref = ref sim in
+    glutDisplayFunc ~display:(fun x -> step sim_ref);
     glutTimerFunc ~msecs:sleep_ticks ~timer ~value:0;
     glutMainLoop ();
   ;;
