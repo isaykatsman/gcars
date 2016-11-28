@@ -12,3 +12,4 @@ chipmunk/chipmunk.mli
 *.exe
 *.gen.c
 _build
+*.byte
