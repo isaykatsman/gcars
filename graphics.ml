@@ -1,6 +1,3 @@
-(* Small portions of this program were adapted from the OCaml Chipmunk Moon
- * Buggy Demo. See legal.txt for more information *)
-
 open GL
 open Glu
 open Glut
@@ -67,12 +64,8 @@ module Graphics = struct
     match verts with
     | [] -> ()
     | curr_vert::next_verts ->
-        let curr_rot = 
-          if angle = 0.0 then curr_vert 
-          else Vect.rot curr_vert angle in
-        let curr_disp = 
-          if pos = Vect.origin then curr_rot
-          else Vect.add curr_rot pos in
+        let curr_rot = Vect.rot curr_vert angle in
+        let curr_disp = Vect.add curr_rot pos in
         draw_line prev_vert curr_disp;
         draw_polyline_aux next_verts curr_disp angle pos
   ;;
@@ -85,6 +78,9 @@ module Graphics = struct
         let first_vert = Vect.add (Vect.rot h angle) pos in
         draw_polyline_aux t first_vert angle pos
 
+  (* This function was adapted from code in the OCaml Chipmunk Moon Buggy Demo 
+   * https://github.com/fccm/ocaml-chipmunk-trunk/blob/master/demos/moon_buggy.ml
+   *)
   let draw_wheel pos r a = 
     let x = (Vect.x pos) in
     let y = (Vect.y pos) in 
@@ -149,9 +145,13 @@ module Graphics = struct
     glutSwapBuffers();
   ;;
 
+  (* This function was adapted from code in the OCaml Chipmunk Moon Buggy Demo 
+   * https://github.com/fccm/ocaml-chipmunk-trunk/blob/master/demos/moon_buggy.ml
+   *)
   let init () = 
-    (* TODO: Not sure if Sys.argv is needed *)
-    ignore(glutInit Sys.argv);
+    (* Initialize with no arguments to Glut *)
+    let args = Array.make 0 "" in
+    ignore(glutInit args);
 
     glutInitDisplayMode [GLUT_DOUBLE; GLUT_RGBA];
 
@@ -172,7 +172,7 @@ module Graphics = struct
     glHint GL_POINT_SMOOTH_HINT  GL_DONT_CARE;
     glLineWidth 1.5;
     
-    (* Magic *)
+    (* Set the projection matrix *)
     glMatrixMode GL_PROJECTION;
     glLoadIdentity ();
     glOrtho (-1000.0) (1000.0) (-750.0) (750.0) (-1.0) (1.0);
