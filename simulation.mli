@@ -2,7 +2,7 @@ open Genetic
 
 type eval_function =
   | LongestDistance
-  | LongestTime
+  | ShortestTime
 
 type options = {
   mutation_rate : float;

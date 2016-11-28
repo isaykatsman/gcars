@@ -8,7 +8,7 @@ open Glut
 
 type eval_function =
   | LongestDistance
-  | LongestTime
+  | ShortestTime
 
 type options = {
   mutation_rate : float;
@@ -53,7 +53,10 @@ module FakeSimulation = struct
       false
   
   (* Score the generation *)
-  let score_gen sim = []
+  let score_gen sim eval_f =
+    match eval_f with
+    | ShortestTime -> []
+    | LongestDistance -> [] 
 
   (* This function will be called by OpenGL on every update. *)
   let step sim_ref =
@@ -61,7 +64,7 @@ module FakeSimulation = struct
 
     let new_sim = 
       if generation_done sim then
-        let scores = score_gen sim in
+        let scores = score_gen sim sim.opts.eval_func in
         let new_pop = Genetic.new_population sim.pop scores
           sim.opts.mutation_rate in
         let new_graphics = Graphics.make new_pop in
