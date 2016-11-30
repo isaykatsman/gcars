@@ -1,4 +1,0 @@
-type get_float_2 =
-  | GL_LINE_WIDTH_RANGE
-  | GL_POINT_SIZE_RANGE
-  | GL_DEPTH_RANGE

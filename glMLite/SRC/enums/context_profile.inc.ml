@@ -1,3 +1,0 @@
-type context_profile =
-  | GLUT_CORE_PROFILE
-  | GLUT_COMPATIBILITY_PROFILE

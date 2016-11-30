@@ -1,5 +1,0 @@
-type buffer_object_target =
-  | GL_ARRAY_BUFFER
-  | GL_ELEMENT_ARRAY_BUFFER
-  | GL_PIXEL_PACK_BUFFER
-  | GL_PIXEL_UNPACK_BUFFER

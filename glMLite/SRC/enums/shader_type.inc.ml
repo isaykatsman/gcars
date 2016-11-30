@@ -1,4 +1,0 @@
-type shader_type =
-  | GL_VERTEX_SHADER
-  | GL_FRAGMENT_SHADER
-  | GL_GEOMETRY_SHADER

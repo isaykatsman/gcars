@@ -13,4 +13,4 @@ chipmunk/chipmunk.mli
 *.gen.c
 _build
 *.byte
-glMLite/
+glMLite/*
