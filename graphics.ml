@@ -10,11 +10,15 @@ module type Graphics = sig
   type t
   val init : unit -> unit
   val make : population -> t
-  val draw : t -> World.t -> unit
+  val draw : t -> float list -> World.t -> unit
 end
 
 module Graphics = struct
-  type precomputed_car = { verts : Vect.t list; genome : car_genome }
+  type precomputed_car = { 
+    verts : Vect.t list; 
+    genome : car_genome; 
+    color : (float * float * float) 
+  }
 
   type t = { precomputed_cars : precomputed_car list } 
 
@@ -45,14 +49,23 @@ module Graphics = struct
         let first_vert = polar_to_vect (List.hd chassis) in
         let verts_new = (first_vert::verts) in 
         let car_genome = curr in 
-        let new_acc = acc@[{genome = car_genome; verts = verts_new}] in 
+        let color = (Random.float 1.0, Random.float 1.0, Random.float 1.0) in
+        let new_acc = acc@[{genome = car_genome; verts = verts_new; color =
+          color}] in 
         init_precomputed_cars next new_acc
 
-  let draw_line v1 v2 = let v1_str = Vect.to_string v1 in
-    let v2_str = Vect.to_string v2 in
-    glBegin GL_LINES;
+  let draw_line v1 v2 = 
+    glBegin(GL_LINES);
       glVertex2 (Vect.x v1) (Vect.y v1);
       glVertex2 (Vect.x v2) (Vect.y v2);
+    glEnd();
+  ;;
+
+  let draw_triangle v1 v2 v3 = 
+    glBegin(GL_TRIANGLES);
+      glVertex2 (Vect.x v1) (Vect.y v1);
+      glVertex2 (Vect.x v2) (Vect.y v2);
+      glVertex2 (Vect.x v3) (Vect.y v3);
     glEnd();
   ;;
     
@@ -66,33 +79,49 @@ module Graphics = struct
         get_furthest_car t new_furthest
 
   let rec draw_polyline_aux (verts : Vect.t list) (prev_vert : Vect.t) (angle :
-    float) (pos : Vect.t) = 
+    float) (pos : Vect.t) closed = 
     match verts with
     | [] -> ()
     | curr_vert::next_verts ->
         let curr_rot = Vect.rot curr_vert angle in
         let curr_disp = Vect.add curr_rot pos in
-        draw_line prev_vert curr_disp;
-        draw_polyline_aux next_verts curr_disp angle pos
+        let () = if closed then draw_triangle prev_vert curr_disp pos
+                 else draw_line prev_vert curr_disp in
+        draw_polyline_aux next_verts curr_disp angle pos closed
   ;;
 
-  let draw_polyline verts angle pos = 
+  let draw_polyline ?closed:(close=false) verts angle pos = 
     match verts with
     | [] -> print_endline "Call to draw_polyline with verts list of length 0";
     | [v] -> print_endline "Call to draw_polyline with verts list of length 1";
     | h::t -> 
         let first_vert = Vect.add (Vect.rot h angle) pos in
-        draw_polyline_aux t first_vert angle pos
+        draw_polyline_aux t first_vert angle pos close
+
 
   (* This function was adapted from code in the OCaml Chipmunk Moon Buggy Demo 
    * https://github.com/fccm/ocaml-chipmunk-trunk/blob/master/demos/moon_buggy.ml
    *)
-  let draw_wheel pos r a = 
+  let draw_wheel pos r a (col00, col01, col02) (col10, col11, col12) = 
     let x = (Vect.x pos) in
     let y = (Vect.y pos) in 
     let segs = 30 in
     let coef = 2.0 *. pi /. (float segs) in
 
+    glColor3 col00 col01 col02;
+    glBegin GL_TRIANGLES;
+      for n=0 to pred segs do
+        let rads0 = (float n) *. coef in
+        let rads1 = ((float_of_int n) +. 1.0) *. coef in
+        glVertex2 (r *. cos(rads0 +. a) +. x)
+                  (r *. sin(rads0 +. a) +. y);
+        glVertex2 (r *. cos(rads1 +. a) +. x)
+                  (r *. sin(rads1 +. a) +. y);
+        glVertex2 x y;
+      done;
+    glEnd ();
+
+    glColor3 col10 col11 col12;
     glBegin GL_LINE_LOOP;
       for n=0 to pred segs do
         let rads = (float n) *. coef in
@@ -112,13 +141,43 @@ module Graphics = struct
       Vect.add (Vect.rot vect state.angle) state.pos in
     match (car.genome.wheels, state.wheel_angles) with
     | ((w1, w2), (w1_angle, w2_angle)) -> 
-        draw_wheel (wheel_pos w1) w1.radius w1_angle;
-        draw_wheel (wheel_pos w2) w2.radius w2_angle;
+        let in_color = (0.7, 0.7, 0.7) in
+        let out_color = (0.4, 0.4, 0.4) in
+        draw_wheel (wheel_pos w1) w1.radius w1_angle in_color out_color;
+        draw_wheel (wheel_pos w2) w2.radius w2_angle in_color out_color;
   ;;
+
+  let darken (c1, c2, c3) =
+    let darken_channel c =
+      let new_c = c -. 0.5 in
+      if new_c < 0.0 then 0.0 else c in
+    (darken_channel c1, darken_channel c2, darken_channel c3)
     
   let draw_car car state =
-    draw_polyline car.verts state.angle state.pos;
+    let (c1, c2, c3) = car.color in
+    glColor3 c1 c2 c3;
+    draw_polyline car.verts state.angle state.pos ~closed:true;
+    let (c1d, c2d, c3d) = darken car.color in
+    glColor3 c1d c2d c3d;
+    draw_polyline car.verts state.angle state.pos ~closed:false;
     draw_wheels car state;
+  ;;
+
+  let explode s =
+    let rec exp i l =
+     if i < 0 then l else exp (i - 1) (s.[i] :: l) in
+    exp (String.length s - 1) [];;
+
+  let draw_string s x y = 
+    let chars = explode s in
+    glColor3 0.0 0.0 0.0;
+    glLineWidth 1.5;
+    glPointSize 0.1;
+    glPushMatrix ();
+    glTranslate x y 0.0;
+    glScale 0.1 0.1 0.1;
+    List.iter (fun c -> glutStrokeCharacter GLUT_STROKE_ROMAN c) chars;
+    glPopMatrix ();
 
   exception Cars_precomputed_length
   let rec draw_cars precomp states =
@@ -130,7 +189,7 @@ module Graphics = struct
     | (_, _) -> raise Cars_precomputed_length
 
   (* Actually draw the world. Requires that get_car_info world is not [] *)
-  let draw graphics world = 
+  let draw graphics prev_max_scores world = 
     let car_states = World.get_car_state world in
 
     (* Move the furthest along car into view *)
@@ -145,19 +204,48 @@ module Graphics = struct
     
     (* Draw the cars and terrain *)
     glColor3 0.0 0.0 0.0;
-    draw_cars graphics.precomputed_cars car_states;
     let terrain = World.get_terrain world in
     draw_polyline terrain 0.0 (Vect.origin);
+    draw_cars graphics.precomputed_cars car_states;
 
-    (* Draw the HUD. Coords relative to center of frame. *)
-    glColor3 1.0 0.0 0.0;
+    (* Draw the HUD background. Coords relative to center of frame. *)
     let hud_x = furthest_x -. ((float_of_int window_width) /. 2.0) in
     let hud_y = furthest_y -. ((float_of_int window_height) /. 2.0) 
                 -. ((float_of_int hud_height) /. 2.0)  in
-    glColor3 0.0 0.0 1.0;
+    glColor3 0.9 0.9 0.9;
     glRect ~x1:hud_x ~y1:hud_y
            ~x2:(hud_x +. (float_of_int window_width))
            ~y2:(hud_y +. (float_of_int hud_height));
+
+    let x_inc = (float_of_int window_width) /. 
+                (float_of_int ((List.length prev_max_scores) - 1)) in
+    
+    let max_y = List.fold_left max 0.0 prev_max_scores in
+    let min_y = List.fold_left min max_float prev_max_scores in
+
+    let rec get_graph_points idx lst acc =
+      match lst with
+      | [] -> acc
+      | h::t -> 
+          let x = (x_inc *. (float_of_int idx)) in
+          let y = (((h -. min_y) /. (max_y -. min_y)) *. (float_of_int
+          (hud_height - 50))) in
+          let p = Vect.make (hud_x +. x) (hud_y +. y) in
+          get_graph_points (idx - 1) t (p::acc) in
+
+    let start_idx = (List.length prev_max_scores) - 1 in
+    let graph_line = get_graph_points start_idx prev_max_scores
+                                      [] in
+    glColor3 1.0 0.0 0.0;
+    let () = 
+      if (List.length prev_max_scores) >= 2 then 
+        draw_polyline graph_line 0.0 Vect.origin; in
+  
+    let curr_gen = string_of_int ((List.length prev_max_scores) + 1) in
+    let str = ("Fitness Function Versus Generation - Current Generation \
+              "^curr_gen) in
+    draw_string str (hud_x +. 10.0) (hud_y +.
+    (float_of_int hud_height) -. 20.0);
 
     glutSwapBuffers();
   ;;
@@ -187,7 +275,7 @@ module Graphics = struct
     glBlendFunc GL_SRC_ALPHA  GL_ONE_MINUS_SRC_ALPHA; 
     glHint GL_LINE_SMOOTH_HINT  GL_DONT_CARE;
     glHint GL_POINT_SMOOTH_HINT  GL_DONT_CARE;
-    glLineWidth 1.5;
+    glLineWidth 2.5;
     
     (* Set the projection matrix *)
     glMatrixMode GL_PROJECTION;
@@ -199,16 +287,15 @@ module Graphics = struct
             (-1.0) (1.0);
     glMatrixMode GL_MODELVIEW;
   ;;
-  
+     
   let sleep_ticks = 16
   let rec timer ~value =
     glutTimerFunc ~msecs:sleep_ticks ~timer ~value:0;
     glutPostRedisplay();
   ;;
-  
+     
   let make pop : t = 
     match pop with
     | Empty n -> { precomputed_cars = [] }
     | Population lst -> { precomputed_cars = (init_precomputed_cars lst []) }
 end
-

@@ -71,12 +71,15 @@ module RealGenetic : GeneticCarAlgo = struct
       chassis
 
   let make_car () =
-    let w1_vert = Random.int 7 in
+    let w1_vert = Random.int 8 in
+    let w2_vert_tmp = Random.int 8 in
+    let w2_vert = if w1_vert = w2_vert_tmp then (w2_vert_tmp + 1) mod 8 else
+      w2_vert_tmp in
     {
       chassis = make_chassis 8 [];
       wheels = (
-        {radius=25.0; vert = w1_vert    },
-        {radius=25.0; vert = w1_vert + 1}
+        {radius=(Random.float 30.0) +. 10.0; vert = w1_vert },
+        {radius=(Random.float 30.0) +. 10.0; vert = w2_vert }
       )
     }
 

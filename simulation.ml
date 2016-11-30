@@ -1,10 +1,13 @@
 open Genetic
 open World
 open Graphics
+open Vect
 
 open GL
 open Glu
 open Glut
+
+open Printf
 
 type eval_function =
   | LongestDistance
@@ -28,6 +31,7 @@ module FakeSimulation = struct
     world : World.t;
     graphics : Graphics.t;
     opts : options;
+    prev_max_scores : float list; 
   }
 
   let sleep_ticks = 16
@@ -40,7 +44,7 @@ module FakeSimulation = struct
     let pop = Genetic.new_population (Empty opts.num_cars) [] opts.mutation_rate in 
     { pop = pop; world = World.make pop; 
       graphics = Graphics.make pop;
-      opts = opts }
+      opts = opts; prev_max_scores = [] }
 
   let counter = ref 0
   (* This function will check if the evaluation of a generation is done (all
@@ -51,12 +55,16 @@ module FakeSimulation = struct
       true
     else
       false
+
+  let score_max_dist car_state = (Vect.x car_state.pos)
   
   (* Score the generation *)
   let score_gen sim eval_f =
     match eval_f with
     | ShortestTime -> []
-    | LongestDistance -> [] 
+    | LongestDistance -> List.map score_max_dist (World.get_car_state sim.world)
+
+  let max lst = List.fold_left max 0.0 lst
 
   (* This function will be called by OpenGL on every update. *)
   let step sim_ref =
@@ -65,15 +73,17 @@ module FakeSimulation = struct
     let new_sim = 
       if generation_done sim then
         let scores = score_gen sim sim.opts.eval_func in
+        let new_prev_scores = (max scores)::sim.prev_max_scores in
         let new_pop = Genetic.new_population sim.pop scores
           sim.opts.mutation_rate in
         let new_graphics = Graphics.make new_pop in
         let terr = World.get_terrain sim.world in
         let new_world = World.with_terrain terr new_pop in
-        { sim with pop = new_pop; graphics = new_graphics; world = new_world }
+        { sim with pop = new_pop; graphics = new_graphics; world = new_world;
+          prev_max_scores = new_prev_scores }
       else
         let new_world = World.step sim.world in
-        Graphics.draw sim.graphics new_world;
+        Graphics.draw sim.graphics sim.prev_max_scores new_world;
         { sim with world = new_world } in
 
       sim_ref := new_sim;
