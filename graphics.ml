@@ -96,12 +96,26 @@ module Graphics = struct
   (* This function was adapted from code in the OCaml Chipmunk Moon Buggy Demo 
    * https://github.com/fccm/ocaml-chipmunk-trunk/blob/master/demos/moon_buggy.ml
    *)
-  let draw_wheel pos r a = 
+  let draw_wheel pos r a (col00, col01, col02) (col10, col11, col12) = 
     let x = (Vect.x pos) in
     let y = (Vect.y pos) in 
     let segs = 30 in
     let coef = 2.0 *. pi /. (float segs) in
 
+    glColor3 col00 col01 col02;
+    glBegin GL_TRIANGLES;
+      for n=0 to pred segs do
+        let rads0 = (float n) *. coef in
+        let rads1 = ((float_of_int n) +. 1.0) *. coef in
+        glVertex2 (r *. cos(rads0 +. a) +. x)
+                  (r *. sin(rads0 +. a) +. y);
+        glVertex2 (r *. cos(rads1 +. a) +. x)
+                  (r *. sin(rads1 +. a) +. y);
+        glVertex2 x y;
+      done;
+    glEnd ();
+
+    glColor3 col10 col11 col12;
     glBegin GL_LINE_LOOP;
       for n=0 to pred segs do
         let rads = (float n) *. coef in
@@ -121,8 +135,10 @@ module Graphics = struct
       Vect.add (Vect.rot vect state.angle) state.pos in
     match (car.genome.wheels, state.wheel_angles) with
     | ((w1, w2), (w1_angle, w2_angle)) -> 
-        draw_wheel (wheel_pos w1) w1.radius w1_angle;
-        draw_wheel (wheel_pos w2) w2.radius w2_angle;
+        let in_color = (1.0, 1.0, 1.0) in
+        let out_color = (0.0, 0.0, 0.0) in
+        draw_wheel (wheel_pos w1) w1.radius w1_angle in_color out_color;
+        draw_wheel (wheel_pos w2) w2.radius w2_angle in_color out_color;
   ;;
     
   let draw_car car state =
