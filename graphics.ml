@@ -10,7 +10,7 @@ module type Graphics = sig
   type t
   val init : unit -> unit
   val make : population -> t
-  val draw : t -> float list -> World.t -> unit
+  val draw : t -> float list -> World.t -> int -> float -> unit
 end
 
 module Graphics = struct
@@ -189,7 +189,7 @@ module Graphics = struct
     | (_, _) -> raise Cars_precomputed_length
 
   (* Actually draw the world. Requires that get_car_info world is not [] *)
-  let draw graphics prev_max_scores world = 
+  let draw graphics prev_max_scores world num_cars mutation_rate = 
     let car_states = World.get_car_state world in
 
     (* Move the furthest along car into view *)
@@ -217,7 +217,7 @@ module Graphics = struct
            ~x2:(hud_x +. (float_of_int window_width))
            ~y2:(hud_y +. (float_of_int hud_height));
 
-    let x_inc = (float_of_int window_width) /. 
+    let x_inc = (float_of_int graph_width) /. 
                 (float_of_int ((List.length prev_max_scores) - 1)) in
     
     let max_y = List.fold_left max 0.0 prev_max_scores in
@@ -230,7 +230,7 @@ module Graphics = struct
           let x = (x_inc *. (float_of_int idx)) in
           let y = (((h -. min_y) /. (max_y -. min_y)) *. (float_of_int
           (hud_height - 50))) in
-          let p = Vect.make (hud_x +. x) (hud_y +. y) in
+          let p = Vect.make (hud_x +. (float_of_int graph_width) +. x) (hud_y +. y) in
           get_graph_points (idx - 1) t (p::acc) in
 
     let start_idx = (List.length prev_max_scores) - 1 in
@@ -242,10 +242,19 @@ module Graphics = struct
         draw_polyline graph_line 0.0 Vect.origin; in
   
     let curr_gen = string_of_int ((List.length prev_max_scores) + 1) in
-    let str = ("Fitness Function Versus Generation - Current Generation \
-              "^curr_gen) in
-    draw_string str (hud_x +. 10.0) (hud_y +.
-    (float_of_int hud_height) -. 20.0);
+    let num_cars_str = string_of_int num_cars in
+    let mut_rate_str = string_of_float mutation_rate in
+
+    let str = ("Fitness Function Versus Generation") in
+    let hud_top = (hud_y +. (float_of_int hud_height) -. 20.0) in
+
+    draw_string str (hud_x +. (float_of_int graph_width) +. 10.0) hud_top;
+    draw_string ("Current Generation: "^curr_gen) (hud_x +. 10.0) 
+                (hud_top);
+    draw_string ("Cars Per Generation: "^num_cars_str) (hud_x +. 10.0) 
+                (hud_top -. 20.0);
+    draw_string ("Mutation Rate: "^mut_rate_str) (hud_x +. 10.0)
+                (hud_top -. 40.0);
 
     glutSwapBuffers();
   ;;

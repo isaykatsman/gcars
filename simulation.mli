@@ -4,7 +4,7 @@ type eval_function =
   | LongestDistance
   | ShortestTime
 
-type options = {
+type sim_options = {
   mutation_rate : float;
   num_cars : int;
   eval_func : eval_function;
@@ -12,7 +12,7 @@ type options = {
 
 module type Simulation = sig
   type t
-  val make : options -> t
+  val make : sim_options -> t
   val run : t -> unit
 end
 

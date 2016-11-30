@@ -13,7 +13,7 @@ type eval_function =
   | LongestDistance
   | ShortestTime
 
-type options = {
+type sim_options = {
   mutation_rate : float;
   num_cars : int;
   eval_func : eval_function;
@@ -21,7 +21,7 @@ type options = {
 
 module type Simulation = sig
   type t
-  val make : options -> t
+  val make : sim_options -> t
   val run : t -> unit
 end
 
@@ -30,7 +30,7 @@ module FakeSimulation = struct
     pop : population;
     world : World.t;
     graphics : Graphics.t;
-    opts : options;
+    opts : sim_options;
     prev_max_scores : float list; 
   }
 
@@ -83,7 +83,8 @@ module FakeSimulation = struct
           prev_max_scores = new_prev_scores }
       else
         let new_world = World.step sim.world in
-        Graphics.draw sim.graphics sim.prev_max_scores new_world;
+        Graphics.draw sim.graphics sim.prev_max_scores new_world
+        sim.opts.num_cars sim.opts.mutation_rate;
         { sim with world = new_world } in
 
       sim_ref := new_sim;

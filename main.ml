@@ -2,7 +2,7 @@ open Sys
 open Genetic
 open Simulation
 
-let parse_opts : options = 
+let parse_opts : sim_options = 
   let mutation_rate = ref 5.0 in
   let num_cars = ref 10 in
   let eval_func = ref LongestDistance in

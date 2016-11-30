@@ -13,7 +13,7 @@ module type Graphics = sig
 
   (* Draw the current state of the simulation. The car which is furthest from
    * the start should always be in view. *)
-  val draw : t -> float list -> World.t -> unit
+  val draw : t -> float list -> World.t -> int -> float -> unit
 end
 
 module Graphics : Graphics
