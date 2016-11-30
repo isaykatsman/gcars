@@ -26,7 +26,7 @@ module Graphics = struct
   let window_height = 700
   let world_height = 480
   let hud_height = window_height - world_height
-  let graph_width = window_width / 2
+  let graph_width = (window_width / 2) - 10
 
   let polar_to_vect (r, theta) =
     let x = r *. cos(theta) in
@@ -229,9 +229,17 @@ module Graphics = struct
       | h::t -> 
           let x = (x_inc *. (float_of_int idx)) in
           let y = (((h -. min_y) /. (max_y -. min_y)) *. (float_of_int
-          (hud_height - 50))) in
-          let p = Vect.make (hud_x +. (float_of_int graph_width) +. x) (hud_y +. y) in
+          (hud_height - 40))) +. 10.0 in
+          let p = Vect.make (hud_x +. ((float_of_int window_width) /. 2.0) +. x) 
+                            (hud_y +. y) in
           get_graph_points (idx - 1) t (p::acc) in
+
+     
+    glColor3 0.8 0.8 0.8;
+    glRect ~x1:(hud_x +. ((float_of_int window_width) /. 2.0)) 
+           ~y1:(hud_y +. 10.0)
+           ~x2:(hud_x +. (float_of_int window_width) -. 10.0)
+           ~y2:(hud_y +. (float_of_int hud_height) -. 30.0);
 
     let start_idx = (List.length prev_max_scores) - 1 in
     let graph_line = get_graph_points start_idx prev_max_scores
@@ -245,7 +253,7 @@ module Graphics = struct
     let num_cars_str = string_of_int num_cars in
     let mut_rate_str = string_of_float mutation_rate in
 
-    let str = ("Fitness Function Versus Generation") in
+    let str = ("Best Score Versus Generation") in
     let hud_top = (hud_y +. (float_of_int hud_height) -. 20.0) in
 
     draw_string str (hud_x +. (float_of_int graph_width) +. 10.0) hud_top;
