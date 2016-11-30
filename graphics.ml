@@ -234,13 +234,13 @@ module Graphics = struct
                             (hud_y +. y) in
           get_graph_points (idx - 1) t (p::acc) in
 
-     
+    let graph_x = (hud_x +. ((float_of_int window_width) /. 2.0)) in
     glColor3 0.8 0.8 0.8;
-    glRect ~x1:(hud_x +. ((float_of_int window_width) /. 2.0)) 
+    glRect ~x1:graph_x
            ~y1:(hud_y +. 10.0)
            ~x2:(hud_x +. (float_of_int window_width) -. 10.0)
            ~y2:(hud_y +. (float_of_int hud_height) -. 30.0);
-
+     
     let start_idx = (List.length prev_max_scores) - 1 in
     let graph_line = get_graph_points start_idx prev_max_scores
                                       [] in
@@ -263,6 +263,17 @@ module Graphics = struct
                 (hud_top -. 20.0);
     draw_string ("Mutation Rate: "^mut_rate_str) (hud_x +. 10.0)
                 (hud_top -. 40.0);
+     
+    let min_y_str = try 
+      String.sub (string_of_float min_y) 0 6
+    with | Invalid_argument s -> "" in
+    let max_y_str = try
+      String.sub (string_of_float max_y) 0 6
+    with | Invalid_argument s -> "" in
+    draw_string min_y_str (graph_x -. 50.0) (hud_y +. 12.0);
+    draw_string max_y_str (graph_x -. 50.0) 
+                (hud_y +. (float_of_int hud_height) -. 47.0);
+
 
     glutSwapBuffers();
   ;;
