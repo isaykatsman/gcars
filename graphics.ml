@@ -161,6 +161,23 @@ module Graphics = struct
     glColor3 c1d c2d c3d;
     draw_polyline car.verts state.angle state.pos ~closed:false;
     draw_wheels car state;
+  ;;
+
+  let explode s =
+    let rec exp i l =
+     if i < 0 then l else exp (i - 1) (s.[i] :: l) in
+    exp (String.length s - 1) [];;
+
+  let draw_string s x y = 
+    let chars = explode s in
+    glColor3 0.0 0.0 0.0;
+    glLineWidth 1.5;
+    glPointSize 0.1;
+    glPushMatrix ();
+    glTranslate x y 0.0;
+    glScale 0.1 0.1 0.1;
+    List.iter (fun c -> glutStrokeCharacter GLUT_STROKE_ROMAN c) chars;
+    glPopMatrix ();
 
   exception Cars_precomputed_length
   let rec draw_cars precomp states =
@@ -211,7 +228,8 @@ module Graphics = struct
       | [] -> acc
       | h::t -> 
           let x = (x_inc *. (float_of_int idx)) in
-          let y = (((h -. min_y) /. (max_y -. min_y)) *. (float_of_int hud_height)) in
+          let y = (((h -. min_y) /. (max_y -. min_y)) *. (float_of_int
+          (hud_height - 70))) in
           let p = Vect.make (hud_x +. x) (hud_y +. y) in
           get_graph_points (idx - 1) t (p::acc) in
 
@@ -222,6 +240,9 @@ module Graphics = struct
     let () = 
       if (List.length prev_max_scores) >= 2 then 
         draw_polyline graph_line 0.0 Vect.origin; in
+    
+    draw_string "Fitness Function Versus Generation" (hud_x +. 10.0) (hud_y +.
+    (float_of_int hud_height) -. 20.0);
 
     glutSwapBuffers();
   ;;
