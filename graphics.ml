@@ -10,7 +10,7 @@ module type Graphics = sig
   type t
   val init : unit -> unit
   val make : population -> t
-  val draw : t -> World.t -> unit
+  val draw : t -> float list -> World.t -> unit
 end
 
 module Graphics = struct
@@ -130,7 +130,7 @@ module Graphics = struct
     | (_, _) -> raise Cars_precomputed_length
 
   (* Actually draw the world. Requires that get_car_info world is not [] *)
-  let draw graphics world = 
+  let draw graphics prev_max_scores world = 
     let car_states = World.get_car_state world in
 
     (* Move the furthest along car into view *)
@@ -149,15 +149,37 @@ module Graphics = struct
     let terrain = World.get_terrain world in
     draw_polyline terrain 0.0 (Vect.origin);
 
-    (* Draw the HUD. Coords relative to center of frame. *)
-    glColor3 1.0 0.0 0.0;
+    (* Draw the HUD background. Coords relative to center of frame. *)
     let hud_x = furthest_x -. ((float_of_int window_width) /. 2.0) in
     let hud_y = furthest_y -. ((float_of_int window_height) /. 2.0) 
                 -. ((float_of_int hud_height) /. 2.0)  in
-    glColor3 0.0 0.0 1.0;
+    glColor3 0.9 0.9 0.9;
     glRect ~x1:hud_x ~y1:hud_y
            ~x2:(hud_x +. (float_of_int window_width))
            ~y2:(hud_y +. (float_of_int hud_height));
+
+    let x_inc = (float_of_int window_width) /. 
+                (float_of_int ((List.length prev_max_scores) - 1)) in
+    
+    let max_y = List.fold_left max 0.0 prev_max_scores in
+    let min_y = List.fold_left min max_float prev_max_scores in
+
+    let rec get_graph_points idx lst acc =
+      match lst with
+      | [] -> acc
+      | h::t -> 
+          let x = (x_inc *. (float_of_int idx)) in
+          let y = (((h -. min_y) /. (max_y -. min_y)) *. (float_of_int hud_height)) in
+          let p = Vect.make (hud_x +. x) (hud_y +. y) in
+          get_graph_points (idx - 1) t (p::acc) in
+
+    let start_idx = (List.length prev_max_scores) - 1 in
+    let graph_line = get_graph_points start_idx prev_max_scores
+                                      [] in
+    glColor3 1.0 0.0 0.0;
+    let () = 
+      if (List.length prev_max_scores) >= 2 then 
+        draw_polyline graph_line 0.0 Vect.origin; in
 
     glutSwapBuffers();
   ;;
@@ -199,16 +221,15 @@ module Graphics = struct
             (-1.0) (1.0);
     glMatrixMode GL_MODELVIEW;
   ;;
-  
+     
   let sleep_ticks = 16
   let rec timer ~value =
     glutTimerFunc ~msecs:sleep_ticks ~timer ~value:0;
     glutPostRedisplay();
   ;;
-  
+     
   let make pop : t = 
     match pop with
     | Empty n -> { precomputed_cars = [] }
     | Population lst -> { precomputed_cars = (init_precomputed_cars lst []) }
 end
-

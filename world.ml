@@ -67,7 +67,6 @@ module FakeWorld = struct
     let vel = car_state.velocity in
     let dx = Vect.make vel 0.0 in
     let new_pos = Vect.add car_state.pos dx in
-    print_endline (string_of_float vel);
     let new_wheel_angles = 
       match car_state.wheel_angles with
       | (a1, a2) -> (a1 +. 0.5, a2 +. 0.5) in
