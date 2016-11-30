@@ -173,9 +173,9 @@ module Graphics = struct
     
     (* Draw the cars and terrain *)
     glColor3 0.0 0.0 0.0;
-    draw_cars graphics.precomputed_cars car_states;
     let terrain = World.get_terrain world in
     draw_polyline terrain 0.0 (Vect.origin);
+    draw_cars graphics.precomputed_cars car_states;
 
     (* Draw the HUD background. Coords relative to center of frame. *)
     let hud_x = furthest_x -. ((float_of_int window_width) /. 2.0) in
