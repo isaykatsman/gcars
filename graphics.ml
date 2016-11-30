@@ -14,7 +14,11 @@ module type Graphics = sig
 end
 
 module Graphics = struct
-  type precomputed_car = { verts : Vect.t list; genome : car_genome }
+  type precomputed_car = { 
+    verts : Vect.t list; 
+    genome : car_genome; 
+    color : (float * float * float) 
+  }
 
   type t = { precomputed_cars : precomputed_car list } 
 
@@ -45,7 +49,9 @@ module Graphics = struct
         let first_vert = polar_to_vect (List.hd chassis) in
         let verts_new = (first_vert::verts) in 
         let car_genome = curr in 
-        let new_acc = acc@[{genome = car_genome; verts = verts_new}] in 
+        let color = (Random.float 1.0, Random.float 1.0, Random.float 1.0) in
+        let new_acc = acc@[{genome = car_genome; verts = verts_new; color =
+          color}] in 
         init_precomputed_cars next new_acc
 
   let draw_line v1 v2 = 
@@ -136,15 +142,23 @@ module Graphics = struct
     match (car.genome.wheels, state.wheel_angles) with
     | ((w1, w2), (w1_angle, w2_angle)) -> 
         let in_color = (0.7, 0.7, 0.7) in
-        let out_color = (0.2, 0.2, 0.2) in
+        let out_color = (0.4, 0.4, 0.4) in
         draw_wheel (wheel_pos w1) w1.radius w1_angle in_color out_color;
         draw_wheel (wheel_pos w2) w2.radius w2_angle in_color out_color;
   ;;
+
+  let darken (c1, c2, c3) =
+    let darken_channel c =
+      let new_c = c -. 0.5 in
+      if new_c < 0.0 then 0.0 else c in
+    (darken_channel c1, darken_channel c2, darken_channel c3)
     
   let draw_car car state =
-    glColor3 1.0 0.2 0.2;
+    let (c1, c2, c3) = car.color in
+    glColor3 c1 c2 c3;
     draw_polyline car.verts state.angle state.pos ~closed:true;
-    glColor3 0.6 0.0 0.0;
+    let (c1d, c2d, c3d) = darken car.color in
+    glColor3 c1d c2d c3d;
     draw_polyline car.verts state.angle state.pos ~closed:false;
     draw_wheels car state;
 
