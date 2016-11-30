@@ -48,11 +48,18 @@ module Graphics = struct
         let new_acc = acc@[{genome = car_genome; verts = verts_new}] in 
         init_precomputed_cars next new_acc
 
-  let draw_line v1 v2 = let v1_str = Vect.to_string v1 in
-    let v2_str = Vect.to_string v2 in
-    glBegin GL_LINES;
+  let draw_line v1 v2 = 
+    glBegin(GL_LINES);
       glVertex2 (Vect.x v1) (Vect.y v1);
       glVertex2 (Vect.x v2) (Vect.y v2);
+    glEnd();
+  ;;
+
+  let draw_triangle v1 v2 v3 = 
+    glBegin(GL_TRIANGLES);
+      glVertex2 (Vect.x v1) (Vect.y v1);
+      glVertex2 (Vect.x v2) (Vect.y v2);
+      glVertex2 (Vect.x v3) (Vect.y v3);
     glEnd();
   ;;
     
@@ -66,23 +73,25 @@ module Graphics = struct
         get_furthest_car t new_furthest
 
   let rec draw_polyline_aux (verts : Vect.t list) (prev_vert : Vect.t) (angle :
-    float) (pos : Vect.t) = 
+    float) (pos : Vect.t) closed = 
     match verts with
     | [] -> ()
     | curr_vert::next_verts ->
         let curr_rot = Vect.rot curr_vert angle in
         let curr_disp = Vect.add curr_rot pos in
-        draw_line prev_vert curr_disp;
-        draw_polyline_aux next_verts curr_disp angle pos
+        let () = if closed then draw_triangle prev_vert curr_disp pos
+                 else draw_line prev_vert curr_disp in
+        draw_polyline_aux next_verts curr_disp angle pos closed
   ;;
 
-  let draw_polyline verts angle pos = 
+  let draw_polyline ?closed:(close=false) verts angle pos = 
     match verts with
     | [] -> print_endline "Call to draw_polyline with verts list of length 0";
     | [v] -> print_endline "Call to draw_polyline with verts list of length 1";
     | h::t -> 
         let first_vert = Vect.add (Vect.rot h angle) pos in
-        draw_polyline_aux t first_vert angle pos
+        draw_polyline_aux t first_vert angle pos close
+
 
   (* This function was adapted from code in the OCaml Chipmunk Moon Buggy Demo 
    * https://github.com/fccm/ocaml-chipmunk-trunk/blob/master/demos/moon_buggy.ml
@@ -117,7 +126,10 @@ module Graphics = struct
   ;;
     
   let draw_car car state =
-    draw_polyline car.verts state.angle state.pos;
+    glColor3 1.0 1.0 1.0;
+    draw_polyline car.verts state.angle state.pos ~closed:true;
+    glColor3 0.0 0.0 0.0;
+    draw_polyline car.verts state.angle state.pos ~closed:false;
     draw_wheels car state;
 
   exception Cars_precomputed_length
