@@ -135,16 +135,16 @@ module Graphics = struct
       Vect.add (Vect.rot vect state.angle) state.pos in
     match (car.genome.wheels, state.wheel_angles) with
     | ((w1, w2), (w1_angle, w2_angle)) -> 
-        let in_color = (1.0, 1.0, 1.0) in
-        let out_color = (0.0, 0.0, 0.0) in
+        let in_color = (0.7, 0.7, 0.7) in
+        let out_color = (0.2, 0.2, 0.2) in
         draw_wheel (wheel_pos w1) w1.radius w1_angle in_color out_color;
         draw_wheel (wheel_pos w2) w2.radius w2_angle in_color out_color;
   ;;
     
   let draw_car car state =
-    glColor3 1.0 1.0 1.0;
+    glColor3 1.0 0.2 0.2;
     draw_polyline car.verts state.angle state.pos ~closed:true;
-    glColor3 0.0 0.0 0.0;
+    glColor3 0.6 0.0 0.0;
     draw_polyline car.verts state.angle state.pos ~closed:false;
     draw_wheels car state;
 
