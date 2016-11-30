@@ -21,19 +21,22 @@ module FakeGenetic = struct
   let rec make_chassis n acc = 
     if n > 0 then
       let angle = Random.float (2.0 *. pi) in
-      let radius = (Random.float 50.0) +. 50.0 in 
+      let radius = (Random.float 50.0) +. 30.0 in 
       make_chassis (n-1) ((radius, angle)::acc)
     else
       let chassis = List.sort (fun x y -> compare (snd x) (snd y)) acc in 
       chassis
   
   let make_car () = 
-    let w1_vert = Random.int 7 in
+    let w1_vert = Random.int 8 in
+    let w2_vert_tmp = Random.int 8 in
+    let w2_vert = if w1_vert = w2_vert_tmp then (w2_vert_tmp + 1) mod 8 else
+      w2_vert_tmp in
     {
       chassis = make_chassis 8 [];
       wheels = (
-        {radius=25.0; vert = w1_vert    },
-        {radius=25.0; vert = w1_vert + 1}
+        {radius=(Random.float 30.0) +. 10.0; vert = w1_vert },
+        {radius=(Random.float 30.0) +. 10.0; vert = w2_vert }
       )
     }
 

@@ -229,7 +229,7 @@ module Graphics = struct
       | h::t -> 
           let x = (x_inc *. (float_of_int idx)) in
           let y = (((h -. min_y) /. (max_y -. min_y)) *. (float_of_int
-          (hud_height - 70))) in
+          (hud_height - 50))) in
           let p = Vect.make (hud_x +. x) (hud_y +. y) in
           get_graph_points (idx - 1) t (p::acc) in
 
@@ -240,8 +240,11 @@ module Graphics = struct
     let () = 
       if (List.length prev_max_scores) >= 2 then 
         draw_polyline graph_line 0.0 Vect.origin; in
-    
-    draw_string "Fitness Function Versus Generation" (hud_x +. 10.0) (hud_y +.
+  
+    let curr_gen = string_of_int ((List.length prev_max_scores) + 1) in
+    let str = ("Fitness Function Versus Generation - Current Generation \
+              "^curr_gen) in
+    draw_string str (hud_x +. 10.0) (hud_y +.
     (float_of_int hud_height) -. 20.0);
 
     glutSwapBuffers();
@@ -272,7 +275,7 @@ module Graphics = struct
     glBlendFunc GL_SRC_ALPHA  GL_ONE_MINUS_SRC_ALPHA; 
     glHint GL_LINE_SMOOTH_HINT  GL_DONT_CARE;
     glHint GL_POINT_SMOOTH_HINT  GL_DONT_CARE;
-    glLineWidth 1.5;
+    glLineWidth 2.5;
     
     (* Set the projection matrix *)
     glMatrixMode GL_PROJECTION;
