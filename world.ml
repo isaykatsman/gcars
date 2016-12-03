@@ -37,18 +37,14 @@ module RealWorld = struct
 
   type t = {
     cars : car_model list;
-    space : cp_space ref;
-    num_steps : int;
+    space : cp_space;
+    terrain : terrain;
   } 
 
 
-  (* let make pop =
-    let space = new cp_space in
-    space#set_gravity (cpv 0.0 (-980.0)); *)
-
   let cpv_of_vect v = cpv (Vect.x v) (Vect.y v)
 
-  let make_terrain len =
+  let make_terrain len (space : cp_space) =
     let empty_terrain = {
       points = [Vect.origin];
       body = new cp_body infinity infinity;
@@ -67,14 +63,25 @@ module RealWorld = struct
 
         let cp_prev_v = cpv_of_vect prev_v in
         let cp_new_v = cpv_of_vect new_v in
-
+        
+        (* Attach the shape to the body and put it in the space *)
         let shape = new cp_shape terr.body (SEGMENT_SHAPE(cp_prev_v, cp_new_v, 0.0)) in
-    let new_shapes = shape::terr.shapes in
+        shape#set_friction 1.0;
+        space#add_static_shape shape;
+        let new_shapes = shape::terr.shapes in
 
         let new_terr = { terr with points = new_points; shapes = new_shapes } in
-        make_terrain_inner (n - 1) new_terr in
+        make_terrain_inner (n - 1) new_terr 
+    in
 
-      make_terrain_inner len empty_terrain
+    make_terrain_inner len empty_terrain
+
+  let make pop =
+    let space = new cp_space in
+    space#set_gravity (cpv 0.0 (-980.0)); 
+    let terr = make_terrain 100 space in
+     
+    { cars = []; space = space; terrain = terr }
      
 end
 
