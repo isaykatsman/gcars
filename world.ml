@@ -24,9 +24,9 @@ end
 
 module RealWorld = struct
   type car_model = {
-    chassis : cp_body ref;
-    wheel1 : cp_body ref;
-    wheel2 : cp_body ref; 
+    chassis : cp_body;
+    wheel1 : cp_body;
+    wheel2 : cp_body; 
   }
 
   type terrain = {
@@ -40,7 +40,6 @@ module RealWorld = struct
     space : cp_space;
     terrain : terrain;
   } 
-
 
   let cpv_of_vect v = cpv (Vect.x v) (Vect.y v)
 
