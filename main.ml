@@ -21,6 +21,7 @@ open Genetic
 open Simulation 
 *)
 
+exception Invalid_evaluation_function
 let parse_opts : sim_options = 
   let mutation_rate = ref 5.0 in
   let num_cars = ref 10 in
@@ -28,7 +29,8 @@ let parse_opts : sim_options =
   let parse_eval_f s =
     match s with
     | "ld" -> LongestDistance
-    | "st" -> ShortestTime in
+    | "st" -> ShortestTime
+    | _ -> raise Invalid_evaluation_function in
   let speclist = [
     ("-n", Arg.Int (fun n -> num_cars := n), "Number of cars per generation. \
     Default is 10.");
