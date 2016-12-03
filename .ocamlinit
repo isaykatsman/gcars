@@ -1,0 +1,22 @@
+#directory "+chipmunk";;
+#load "chipmunk.cma";;
+
+#directory "+glMLite";;
+#load "GL.cma";;
+#load "Glu.cma";;
+#load "Glut.cma";;
+
+#directory "+chipmunk";;
+#load "chipmunk.cma";;
+
+#use "vect.ml"
+#use "genetic.ml"
+#use "world.ml"
+#use "graphics.ml"
+#use "simulation.ml"
+
+open Genetic
+open Vect
+open Graphics
+open World
+open Simulation

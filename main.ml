@@ -1,6 +1,25 @@
+#directory "+chipmunk";;
+#load "chipmunk.cma";;
+
+#directory "+glMLite";;
+#load "GL.cma";;
+#load "Glu.cma";;
+#load "Glut.cma";;
+
+#directory "+chipmunk";;
+#load "chipmunk.cma";;
+
+#use "vect.ml"
+#use "genetic.ml"
+#use "world.ml"
+#use "graphics.ml"
+#use "simulation.ml"
+
 open Sys
+(* 
 open Genetic
-open Simulation
+open Simulation 
+*)
 
 let parse_opts : sim_options = 
   let mutation_rate = ref 5.0 in

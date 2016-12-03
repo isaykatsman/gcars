@@ -1,11 +1,11 @@
 open GL
 open Glu
 open Glut
-
+(*
 open World
 open Vect
 open Genetic
-
+*)
 module type Graphics = sig
   type t
   val init : unit -> unit

@@ -1,3 +1,4 @@
+(*
 open Genetic
 open World
 open Graphics
@@ -6,7 +7,7 @@ open Vect
 open GL
 open Glu
 open Glut
-
+*)
 open Printf
 
 type eval_function =
