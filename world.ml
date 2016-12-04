@@ -90,6 +90,40 @@ module RealWorld = struct
     let radius = wheel.radius in
     ()
 *)
+  let add_chassis_triangle verts body (space : cp_space) : unit =
+    print_string "[|";
+    Array.iter (fun x -> print_string ("("^(string_of_float x.cp_x)^", \
+    "^(string_of_float x.cp_y)^"); "))
+               verts;
+    print_string "|]";
+    print_newline ();
+    let shape = new cp_shape body (POLY_SHAPE(verts, cpv_zero)) in
+    shape#set_friction 0.5;
+    space#add_shape shape;
+  ;;
+
+  let rec chassis_triangles lst body (space : cp_space) : unit =
+    let first_vert = List.hd lst in
+    match lst with
+    | [] -> ()
+    | e::[] -> () 
+        (* TODO: Add back in this triangle. Removed because the verticies
+        are sometimes not in counter-clockwise order which chipmunk requires *)
+        (*
+        let verts = [| 
+          cpv_of_polar e; 
+          cpv_of_polar first_vert;
+          cpv_zero |] in
+        add_chassis_triangle verts body space; *)
+    | h1::h2::t -> 
+        let verts = [|
+          cpv_of_polar h2;
+          cpv_of_polar h1;
+          cpv_zero |] in
+        add_chassis_triangle verts body space;
+        chassis_triangles (h2::t) body space;
+  ;;
+
   (* TODO: Support more than 1 car *)
   let make_cars (space : cp_space) pop = 
     match pop with
@@ -101,51 +135,9 @@ module RealWorld = struct
           (* TODO: Cacluate moment of interia and mass for body *)
           let body = new cp_body 5.0 3.0 in 
 
-          let add_chassis_triangle verts : unit =
-            let shape_verts = [|
-              cpv (-50.) (-50.);
-              cpv (-50.) ( 50.);
-              cpv ( 50.) ( 50.);
-              cpv ( 50.) (-50.);
-            |] in
-            print_string "[|";
-            Array.iter (fun x -> print_string ("("^(string_of_float x.cp_x)^", \
-            "^(string_of_float x.cp_y)^"); "))
-                       verts;
-            print_string "|]";
-            print_newline ();
-            let shape = new cp_shape body (POLY_SHAPE(verts, cpv_zero)) in
-            shape#set_friction 0.5;
-            shape#set_elasticity 10000.0;
-            space#add_shape shape;
-          in
-
-          let rec chassis_triangles lst : unit =
-            let first_vert = List.hd lst in
-            match lst with
-            | [] -> ()
-            | e::[] -> () (*
-                let verts = [| 
-                  cpv_of_polar e; 
-                  cpv_of_polar first_vert;
-                  cpv_zero |] in
-                add_chassis_triangle verts body space;*)
-            | h1::h2::t -> 
-                let verts = [|
-                  cpv_of_polar h2;
-                  cpv_of_polar h1;
-                  cpv_zero |] in
-                add_chassis_triangle verts;
-                chassis_triangles (h2::t);
-          in
-
-          body#set_pos (cpv 600.0 500.0);
+          body#set_pos (cpv 200.0 500.0);
           space#add_body body;
-          let shape = new cp_shape body (CIRCLE_SHAPE(50.0, cpvzero ())) in 
-          shape#set_friction 10.0;
-          space#add_shape shape;
-
-          (* chassis_triangles car.chassis; *)
+          chassis_triangles car.chassis body space;
           (* TODO: Add wheels *)
           (*List.iter (add_wheel car body space) car.wheels; *)
           let wheel1 = new cp_body 1.0 1.0 in
@@ -158,7 +150,8 @@ module RealWorld = struct
 
   let make pop =
     let space = new cp_space in
-    space#set_gravity (cpv 0.0 (-900.0)); 
+    init_chipmunk ();
+    space#set_gravity (cpv 0.0 (-980.0)); 
     let terr = make_terrain 100 space in
     let cars = make_cars space pop in
     { cars = cars; space = space; terrain = terr }
@@ -224,7 +217,7 @@ module FakeWorld = struct
     match acc with
     | [] -> make_terrain n [Vect.origin]
     | prev_v::t -> 
-        let angle = (Random.float pi) -. (pi /. 2.0) in
+        let angle = (Random.float pi /. 2.0) -. (pi /. 4.0) in
         let v = Vect.rot (Vect.make 50.0 0.0) angle in
         let v_new = Vect.add v prev_v in
         let v1_str = Vect.to_string prev_v in
