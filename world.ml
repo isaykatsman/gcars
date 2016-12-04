@@ -68,6 +68,7 @@ module RealWorld = struct
         (* Attach the shape to the body and put it in the space *)
         let shape = new cp_shape terr.body (SEGMENT_SHAPE(cp_prev_v, cp_new_v, 10.0)) in
         shape#set_friction 1.0;
+        shape#set_elasticity 0.0;
         space#add_static_shape shape;
         let new_shapes = shape::terr.shapes in
         let new_terr = { terr with points = new_points; shapes = new_shapes } in
@@ -130,7 +131,7 @@ module RealWorld = struct
         else
           let car = List.hd lst in
           (* TODO: Cacluate moment of interia and mass for body *)
-          let body = new cp_body 5.0 3.0 in 
+          let body = new cp_body 5.0 1000.0 in 
 
           let add_chassis_triangle verts : unit =
             let shape_verts = [|
@@ -188,8 +189,8 @@ module RealWorld = struct
           let wheel2 = new cp_body 1.0 1.0 in 
           wheel1#set_pos (cpvadd body#get_pos (cpv_of_polar ((List.nth car.chassis whinfo1.vert))));
           wheel2#set_pos (cpvadd body#get_pos (cpv_of_polar (List.nth car.chassis whinfo2.vert)));
-          space#add_body wheel1;
-          space#add_body wheel2;
+          (*space#add_body wheel1;
+          space#add_body wheel2; *)
 
           let j1 = new cp_joint body wheel1 (PIN_JOINT(cpvzero(), cpvzero()))
           and j2 = new cp_joint body wheel2 (PIN_JOINT(cpvzero(), cpvzero())) in
@@ -200,8 +201,8 @@ module RealWorld = struct
           and wheelshape2 = new cp_shape wheel2 (CIRCLE_SHAPE(whinfo2.radius, cpvzero())) in 
           wheelshape1#set_friction 1.0;
           wheelshape2#set_friction 1.0;
-          wheelshape1#set_elasticity 0.0;
-          space#add_shape wheelshape1;
+          (* wheelshape1#set_elasticity 0.0; *)
+          (*space#add_shape wheelshape1; *)
           (* space#add_shape wheelshape2; *)
 
           
@@ -241,8 +242,10 @@ module RealWorld = struct
     let dt = (1.0 /. 60.0) /. (float substeps) in
     for i=0 to pred substeps do
       let cars = step_cars world.cars in
+      (*
       print_float ((List.nth cars 0).wheel1#get_pos).cp_y; print_string " ";
       print_float ((List.nth cars 0).chassis#get_pos).cp_y; print_newline ();
+      *)
       (* print_float (((List.nth cars 0).wheel1#get_pos).cp_y -. ((List.nth cars 0).chassis#get_pos).cp_y); print_newline (); *)
       let space = world.space in 
       space#step dt;
