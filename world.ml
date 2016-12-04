@@ -131,6 +131,12 @@ module RealWorld = struct
     let terr = make_terrain 100 space in
     let cars = make_cars space pop in
     { cars = cars; space = space; terrain = terr }
+
+  let step world = 
+    world
+
+  let get_terrain t = t.terrain.points
+  let get_car_state t = []
 end
 
 module FakeWorld = struct
