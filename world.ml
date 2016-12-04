@@ -126,10 +126,12 @@ module RealWorld = struct
           (* TODO: Cacluate moment of interia and mass for body *)
           let body = new cp_body 5.0 3.0 in 
           body#set_pos (cpv 200.0 300.0);
+          space#add_body body;
           chassis_triangles car.chassis body space;
           (* TODO: Add wheels *)
           (*List.iter (add_wheel car body space) car.wheels; *)
-          [{ chassis = body; wheel1 = body; wheel2 = body }]
+          let wheel = new cp_body 1.0 1.0 in
+          [{ chassis = body; wheel1 = wheel; wheel2 = wheel }]
     | Empty n -> failwith "make_cars with Empty not implemented"
   ;;
 
@@ -150,14 +152,14 @@ module RealWorld = struct
     wheel1#reset_forces;
     wheel2#reset_forces;
     let max_w = -100.0 in
-    let torque = 60000.0 *. (min 1.0 ((wheel1#get_a_vel -. 1 *. max_w) /. max_w)) in 
+    let torque = 60000.0 *. (min 1.0 ((wheel1#get_a_vel -. 1.0 *. max_w) /. max_w)) in 
     wheel1#set_torque (wheel1#get_torque +. torque);
     wheel2#set_torque (wheel1#get_torque);
     chassis#set_torque (chassis#get_torque -. torque);
     step_cars xs'
 
-
   let step world = 
+    print_endline "in step";
     let substeps = 3 in
     let dt = (1.0 /. 60.0) /. (float substeps) in
     let cars = step_cars world.cars in 
