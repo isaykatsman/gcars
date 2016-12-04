@@ -6,9 +6,6 @@
 #load "Glu.cma";;
 #load "Glut.cma";;
 
-#directory "+chipmunk";;
-#load "chipmunk.cma";;
-
 #use "vect.ml"
 #use "genetic.ml"
 #use "world.ml"
@@ -24,7 +21,7 @@ open Simulation
 exception Invalid_evaluation_function
 let parse_opts : sim_options =
   let mutation_rate = ref 5.0 in
-  let num_cars = ref 10 in
+  let num_cars = ref 1 in
   let eval_func = ref LongestDistance in
   let parse_eval_f s =
     match s with
