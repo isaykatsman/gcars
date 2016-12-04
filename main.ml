@@ -1,13 +1,10 @@
-#directory "+chipmunk";;
+#directory "./chipmunk";;
 #load "chipmunk.cma";;
 
-#directory "+glMLite";;
+#directory "./glMLite/SRC";;
 #load "GL.cma";;
 #load "Glu.cma";;
 #load "Glut.cma";;
-
-#directory "+chipmunk";;
-#load "chipmunk.cma";;
 
 #use "vect.ml"
 #use "genetic.ml"
