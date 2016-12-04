@@ -47,9 +47,11 @@ module FakeGenetic = struct
       chassis
 
   let make_car () =
+    let fake_r = 100.0 in 
     let w1_vert = Random.int 7 in
     {
       chassis = make_chassis 8 [];
+      (* chassis = [(fake_r,0.0);(fake_r,pi/.2.0);(fake_r,pi);(fake_r, 3.0*.pi/.2.0)]; *)
       wheels = (
         {radius=25.0; vert = w1_vert    },
         {radius=25.0; vert = w1_vert + 1}

@@ -57,7 +57,7 @@ module RealWorld = struct
         terr
       else
         let prev_v::t = terr.points in
-        let angle = (Random.float pi /. 2.0) -. (pi /. 4.0) in
+        let angle = (Random.float pi /. 100.0) -. (pi /. 200.0) in
         let v = Vect.rot (Vect.make 50.0 0.0) angle in
         let new_v = Vect.add v prev_v in
         let new_points = new_v::prev_v::t in
@@ -66,16 +66,13 @@ module RealWorld = struct
         let cp_new_v = cpv_of_vect new_v in
         
         (* Attach the shape to the body and put it in the space *)
-        let shape = new cp_shape terr.body (SEGMENT_SHAPE(cp_prev_v, cp_new_v, 0.0)) in
+        let shape = new cp_shape terr.body (SEGMENT_SHAPE(cp_prev_v, cp_new_v, 10.0)) in
         shape#set_friction 1.0;
         space#add_static_shape shape;
-        shape#set_elasticity 0.0;
         let new_shapes = shape::terr.shapes in
-
         let new_terr = { terr with points = new_points; shapes = new_shapes } in
         make_terrain_inner (n - 1) new_terr 
     in 
-
     make_terrain_inner len empty_terrain
 
   let cpv_of_polar (r, theta) =
@@ -116,42 +113,64 @@ module RealWorld = struct
             print_newline ();
             let shape = new cp_shape body (POLY_SHAPE(verts, cpv_zero)) in
             shape#set_friction 0.5;
-            shape#set_elasticity 10000.0;
+            shape#set_elasticity 0.0;
             space#add_shape shape;
           in
-
-          let rec chassis_triangles lst : unit =
+          let rec get_chassis_shape lst = 
             let first_vert = List.hd lst in
-            match lst with
-            | [] -> ()
-            | e::[] -> () (*
-                let verts = [| 
-                  cpv_of_polar e; 
-                  cpv_of_polar first_vert;
-                  cpv_zero |] in
-                add_chassis_triangle verts body space;*)
-            | h1::h2::t -> 
-                let verts = [|
-                  cpv_of_polar h2;
-                  cpv_of_polar h1;
-                  cpv_zero |] in
-                add_chassis_triangle verts;
-                chassis_triangles (h2::t);
+            let rec chassis_triangles lst =
+              let sort a b = 
+                int_of_float (b.cp_y *. a.cp_x -. a.cp_y *. b.cp_x)
+              in
+              print_string "first: "; print_float (fst first_vert); 
+              match lst with
+              | [] -> ()
+              | e::[] -> 
+                  let verts = [| 
+                    cpv_of_polar e; 
+                    cpv_of_polar first_vert;
+                    cpv_zero |] in
+                  Array.sort sort verts;
+                  add_chassis_triangle verts;
+                  ()
+              | h1::h2::t -> 
+                  let verts = [|
+                    cpv_of_polar h2;
+                    cpv_of_polar h1;
+                    cpv_zero |] in
+                  add_chassis_triangle verts;
+                  chassis_triangles (h2::t);
+            in
+            chassis_triangles lst
           in
 
           body#set_pos (cpv 600.0 500.0);
           space#add_body body;
-          let shape = new cp_shape body (CIRCLE_SHAPE(50.0, cpvzero ())) in 
-          shape#set_friction 10.0;
-          space#add_shape shape;
-
-          (* chassis_triangles car.chassis; *)
+          get_chassis_shape car.chassis;
           (* TODO: Add wheels *)
           (*List.iter (add_wheel car body space) car.wheels; *)
+          let (whinfo1, whinfo2) = car.wheels in 
           let wheel1 = new cp_body 1.0 1.0 in
           let wheel2 = new cp_body 1.0 1.0 in 
+          wheel1#set_pos (cpvadd body#get_pos (cpv_of_polar ((List.nth car.chassis whinfo1.vert))));
+          wheel2#set_pos (cpvadd body#get_pos (cpv_of_polar (List.nth car.chassis whinfo2.vert)));
           space#add_body wheel1;
           space#add_body wheel2;
+
+          let j1 = new cp_joint body wheel1 (PIN_JOINT(cpvzero(), cpvzero()))
+          and j2 = new cp_joint body wheel2 (PIN_JOINT(cpvzero(), cpvzero())) in
+          space#add_constraint (j1#get_constraint);
+          space#add_constraint (j2#get_constraint);
+
+          let wheelshape1 = new cp_shape wheel1 (CIRCLE_SHAPE(whinfo1.radius, cpvzero()))
+          and wheelshape2 = new cp_shape wheel2 (CIRCLE_SHAPE(whinfo2.radius, cpvzero())) in 
+          wheelshape1#set_friction 1.0;
+          wheelshape2#set_friction 1.0;
+          wheelshape1#set_elasticity 0.0;
+          space#add_shape wheelshape1;
+          (* space#add_shape wheelshape2; *)
+
+          
           [{ chassis = body; wheel1 = wheel1; wheel2 = wheel2 }]
     | Empty n -> failwith "make_cars with Empty not implemented"
   ;;
@@ -178,7 +197,7 @@ module RealWorld = struct
     (* wheel2#set_torque (wheel1#get_torque); *)
     (* chassis#set_torque (chassis#get_torque -. torque); *)
     (* wheel1#set_a_vel 10.0; *)
-    chassis#set_a_vel (~-. 10.0);
+    (* chassis#set_a_vel (~-. 10.0); *)
     (* chassis#set_force (cpv 50.0 (0.0)); *)
     {wheel1 = wheel1; wheel2 = wheel2; chassis = chassis}::step_cars xs'
 
@@ -187,7 +206,9 @@ module RealWorld = struct
     let dt = (1.0 /. 60.0) /. (float substeps) in
     for i=0 to pred substeps do
       let cars = step_cars world.cars in
+      print_float ((List.nth cars 0).wheel1#get_pos).cp_y; print_string " ";
       print_float ((List.nth cars 0).chassis#get_pos).cp_y; print_newline ();
+      (* print_float (((List.nth cars 0).wheel1#get_pos).cp_y -. ((List.nth cars 0).chassis#get_pos).cp_y); print_newline (); *)
       let space = world.space in 
       space#step dt;
     done;

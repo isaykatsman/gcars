@@ -138,7 +138,8 @@ module Graphics = struct
     let wheel_pos w =
       let pair = List.nth car.genome.chassis w.vert in
       let vect = polar_to_vect pair in
-      Vect.add (Vect.rot vect state.angle) state.pos in
+      Vect.add (Vect.rot vect state.angle) state.pos 
+    in
     match (car.genome.wheels, state.wheel_angles) with
     | ((w1, w2), (w1_angle, w2_angle)) -> 
         let in_color = (0.7, 0.7, 0.7) in
