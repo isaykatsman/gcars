@@ -77,13 +77,13 @@ module RealWorld = struct
 
     make_terrain_inner len empty_terrain
 
-  let add_chassis_triangle verts body (space : cp_space) : unit =
+  let add_chassis_triangle verts body (space : cp_space ref) : unit =
     (* TODO: Cacluate mass from area assuming constant density *)
     let mass = 0.625 in
     let moment = moment_for_poly mass verts cpv_zero in
-    let shape = new cp_shape body (POLY_SHAPE(verts, cpv_zero)) in
+    let shape = new cp_shape !body (POLY_SHAPE(verts, cpv_zero)) in
     shape#set_friction 0.5;
-    space#add_shape shape;
+    !space#add_shape shape;
   ;;
 
   let cpv_of_polar (r, theta) =
@@ -91,7 +91,7 @@ module RealWorld = struct
     let y = r *. sin(theta) in
     cpv x y
 
-  let chassis_triangles lst body (space : cp_space) : unit =
+  let chassis_triangles lst body (space : cp_space ref) : unit =
     let first_vert = List.hd lst in
     match lst with
     | [] -> ()
@@ -125,9 +125,9 @@ module RealWorld = struct
           let car = List.hd lst in
           (* TODO: Cacluate moment of interia and mass for body *)
           let body = new cp_body 5.0 3.0 in 
-          body#set_pos (cpv 200.0 300.0);
+          body#set_pos (cpv 200.0 500.0);
           space#add_body body;
-          chassis_triangles car.chassis body space;
+          chassis_triangles car.chassis (ref body) (ref space);
           (* TODO: Add wheels *)
           (*List.iter (add_wheel car body space) car.wheels; *)
           let wheel1 = new cp_body 1.0 1.0 in
