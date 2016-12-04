@@ -81,6 +81,13 @@ module RealWorld = struct
     let terr = make_terrain 100 space in
      
     { cars = []; space = space; terrain = terr }
+
+  let step world = 
+  world
+
+  let get_terrain t = t.terrain
+  let get_car_state t = t.cars
+
      
 end
 
