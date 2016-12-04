@@ -143,7 +143,7 @@ module RealWorld = struct
     { cars = cars; space = space; terrain = terr }
 
   let rec step_cars = function
-  | [] -> ()
+  | [] -> [] 
   | x::xs' -> 
     let chassis = x.chassis
     and wheel1 = x.wheel1
@@ -155,11 +155,9 @@ module RealWorld = struct
     let torque = 60000.0 *. (min 1.0 ((wheel1#get_a_vel -. 1.0 *. max_w) /. max_w)) in 
     wheel1#set_torque (wheel1#get_torque +. torque);
     wheel2#set_torque (wheel1#get_torque);
-    chassis#set_torque (chassis#get_torque -. torque);
-    step_cars xs'
+    {wheel1 = wheel1; wheel2 = wheel2; chassis = chassis}::step_cars xs'
 
   let step world = 
-    print_endline "in step";
     let substeps = 3 in
     let dt = (1.0 /. 60.0) /. (float substeps) in
     let cars = step_cars world.cars in 
