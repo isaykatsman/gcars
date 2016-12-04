@@ -71,7 +71,7 @@ module RealWorld = struct
 
         let new_terr = { terr with points = new_points; shapes = new_shapes } in
         make_terrain_inner (n - 1) new_terr 
-    in
+    in 
 
     make_terrain_inner len empty_terrain
 
@@ -82,13 +82,33 @@ module RealWorld = struct
      
     { cars = []; space = space; terrain = terr }
 
+  let rec step_cars = function
+  | [] -> ()
+  | x::xs' -> 
+    let chassis = x.chassis
+    and wheel1 = x.wheel1
+    and wheel2 = x.wheel2 in
+    chassis#reset_forces;
+    wheel1#reset_forces;
+    wheel2#reset_forces;
+    let max_w = -100.0 in
+    let torque = 60000.0 *. (min 1.0 ((wheel1#get_a_vel -. 1 *. max_w) /. max_w)) in 
+    wheel1#set_torque (wheel1#get_torque +. torque);
+    wheel2#set_torque (wheel1#get_torque);
+    chassis#set_torque (chassis#get_torque -. torque);
+    step_cars xs'
+
+
   let step world = 
-  world
+    let substeps = 3 in
+    let dt = (1.0 /. 60.0) /. (float substeps) in
+    let cars = step_cars world.cars in 
+    let space = world.space in 
+    space#step dt;
+    world
 
   let get_terrain t = t.terrain
   let get_car_state t = t.cars
-
-     
 end
 
 module FakeWorld = struct
@@ -150,5 +170,5 @@ module FakeWorld = struct
     { world with cars = new_states }
 end
 
-module World = FakeWorld
+module World = RealWorld
 
