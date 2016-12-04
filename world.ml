@@ -11,6 +11,7 @@ type car_state = {
   pos : Vect.t;
   angle : float; (* in radians *)
   wheel_angles : float * float;
+  wheel_positions : Vect.t list;
 }
 
 module type World = sig
@@ -65,7 +66,7 @@ module RealWorld = struct
         terr
       else
         let prev_v::t = terr.points in
-        let angle = (Random.float pi /. 100.0) -. (pi /. 200.0) in
+        let angle = (Random.float pi /. 2.0) -. (pi /. 4.0) in
         let v = Vect.rot (Vect.make 50.0 0.0) angle in
         let new_v = Vect.add v prev_v in
         let new_points = new_v::prev_v::t in
@@ -209,7 +210,7 @@ module RealWorld = struct
     {wheel1 = wheel1; wheel2 = wheel2; chassis = chassis}::step_cars xs'
 
   let step world = 
-    let substeps = 100 in
+    let substeps = 3 in
     let dt = (1.0 /. 60.0) /. (float substeps) in
     for i=0 to pred substeps do
       let cars = step_cars world.cars in
@@ -234,9 +235,11 @@ module RealWorld = struct
         let pos = vect_of_cpv (c.chassis#get_pos) in
         let wheel_angles = (c.wheel1#get_angle, c.wheel2#get_angle) in
         (* TODO: Hardcoded velocity to 0 *)
+        let wheel_positions = [vect_of_cpv c.wheel1#get_pos; 
+                               vect_of_cpv c.wheel2#get_pos] in
         let velocity = 0.0 in
         [{velocity = velocity; pos = pos; angle = angle; wheel_angles =
-          wheel_angles}]
+          wheel_angles; wheel_positions = wheel_positions }]
     | _ -> failwith "get_car_state with more than 1 car not implemented"
 
   (* TODO: Dummy implementation *)
@@ -268,7 +271,8 @@ module FakeWorld = struct
         velocity = Random.float 10.0; 
         pos = Vect.make 0.0 0.0; 
         angle = 0.0;
-        wheel_angles = (1.0, 2.0)
+        wheel_angles = (1.0, 2.0);
+        wheel_positions = [];
       } in
       make_states (n-1) (car::acc)
 
