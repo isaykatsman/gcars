@@ -9,6 +9,25 @@ type population =
   | Population of car_genome list
   | Empty of int
 
+(* needed to initiate world *)
+type world_params = {
+  mut_rate : float; (* value: 0-1; fraction of genes that will be mutated
+                     * randomly. *)
+  mut_range : float; (* value: 0-1; multiplier for actual range*)
+  r_min : float; (* value: unconstrained; minimum r value for body vertices *)
+  r_range : float; (* value: unconstrained; range r value for body vertices *)
+  wheel_min : float; (* value: unconstrained; radius for wheels *)
+  wheel_range : float; (* value: unconstrained; range for wheel radius *)
+}
+
+(* mutation params for one type of data *)
+type mutation_params = {
+  mut_rate : float;
+  mut_range : float;
+  min: float;
+  range: float;
+}
+
 type scores = float list
 
 module type GeneticCarAlgo = sig
@@ -51,7 +70,7 @@ module FakeGenetic = struct
     Population cars
 end
 
-module RealGenetic : GeneticCarAlgo = struct
+(*module RealGenetic : GeneticCarAlgo = struct
   let pi = 3.14159265359
   let max_wheel_radius = 50.0
   let min_wheel_radius = 50.0
@@ -102,7 +121,8 @@ module RealGenetic : GeneticCarAlgo = struct
     if rand = 0. then
       0
     else
-      (* healthy parents assumed to be 0-4, 5 carries this emphasis *)
+      (* healthy parents assumed to be 0-4, 5 means 62.3% of the
+       * random distribution is covered by the 0-4 values *)
       (int_of_float (floor(-.1. *. log(rand) *. 5.))) mod gen_size
 
   (* uses swap points to return what parent to use
@@ -113,9 +133,123 @@ module RealGenetic : GeneticCarAlgo = struct
     else
       cur_parent (* no swap necessary *)
 
-  (* mutates the traits according to the mutation rate (probability)
-   * this is AFTER a new car is synthesized from 2 parents *)
+  (* mutate value with probability of mutation_rate which is
+   * stored in p, the parameters of the mutation *)
+  let mutate_value value (p:mutation_params) =
+    if Random.float 1. < p.mut_rate then
+      let mut_span = p.range *. p.mut_range in
+      let mut_base = value -. 0.5 *. mut_span in
+      (* prevent mutation from going over allowed
+       * max/min value *)
+      if mut_base < p.min then
+        p.min +. mut_span *. (Random.float 1.)
+      else if mut_base > p.min +. (p.range -. mut_span) then
+        p.min +. (p.range -. mut_span) +. mut_span *. (Random.float 1.)
+      else
+        mut_base +. mut_span *. (Random.float 1.)
+    else
+      (* no mutation applied *)
+      value
 
+  (* mutate a vertex of the chassis,
+   * uses mutation parameters from p
+   * TODO: perturb theta, set as secod coordinate *)
+  let mutate_vertex vert p theta =
+    let mutatedr = mutate_value (fst vert) p in
+    (mutatedr, (snd vert))
+
+  (* mutate 8 vertices of chassis.
+   * use mutation parameters provided by p *)
+  let rec mutate_chassis chassis p verts accum =
+    match chassis with
+    | [] -> verts
+    | h::t -> mutate_chassis t p (mutate_vertex h p accum*.pi/.2.)::verts accum+1
+
+  (* mutate wheel vert *)
+  let mutate_wheel_vert val num_verts =
+    let wheel = (((Random.int (int_of_float num_verts)) - num_verts)
+                 + val + num_verts) mod num_verts
+    in
+    wheel
+
+  (* mutate a single wheel *)
+  let mutate_wheel w p =
+    let newr = mutate_value w.radius p in
+    let newv = mutate_wheel_vert w.vert 8 in
+    {radius = newr; vert = newv}
+
+  (* mutate wheel radii, with mutation parameters p*)
+  let mutate_wheels wheels p =
+    let left = mutate_wheel (fst wheels) p in
+    let right = mutate_wheel (snd wheels) p in
+    (left, right)
+
+  (* mutates the traits according to the mutation rate (probability)
+   * this is AFTER a new car is synthesized from 2 parents
+   * returns the mutated car *)
+  let mutate_car car (p:world_params) =
+    let p_wheels = {mut_rate = p.mut_rate; mut_range = p.mut_range;
+                    min = wheel_min; range = wheel_range} in
+    let p_chassis = {mut_rate = p.mut_rate; mut_range = p.mut_range;
+                    min = r_min; range = r_range} in
+    let prevchassis = car.chassis in
+    let prevwheels = car.wheels in
+    let newchassis = List.rev (mutate_chassis prevchassis p_chassis [] 0) in
+    let newwheels = mutate_wheels prevwheels p_wheels in
+    {chassis = newchassis; wheels = newwheels}
+
+  (* randomly gets two swap points from the number of attributes
+   * precondition: if initial call, p1 = p2, so that random
+   * points actually get chosen *)
+  let rec get_swap_points numgenes p1 p2 =
+    if p1 = p2 then
+      let p1 = Random.int numgenes in
+      let p2 = Random.int numgenes in
+      get_swap_points numgenes p1 p2
+    else
+      (p1, p2)
+
+  (* returns proper parents based on parent index *)
+  let get_parent index parent1 parent2 =
+    if index = 0 then parent1 else parent2
+
+  (* make wheels of child from parents based on swap points *)
+  let make_child_wheels parent1 parent2 swp1 swp2 start_parent start_index =
+    let n1_parent = choose_parent swp1 swp2 start_parent start_index in
+    let w1_rad = (fst (get_parent n1_parent parent1 parent2).wheels).radius in
+    let n2_parent = choose_parent swp1 swp2 n1_parent start_index+1 in
+    let w1_vert = (fst (get_parent n2_parent parent1 parent2).wheels).vert in
+    let n3_parent = choose_parent swp1 swp2 n2_parent start_index+2 in
+    let w2_rad = (snd (get_parent n3_parent parent1 parent2).wheels).radius in
+    let n4_parent = choose_parent swp1 swp2 n3_parent start_index+3 in
+    let w2_vert = (snd (get_parent n4_parent parent1 parent2).wheels).vert in
+    let w1 = {radius = w1_rad; vert = w1_vert} in
+    let w2 = {radius = w2_rad; vert = w2_vert} in
+    (n4_parent, (w1,w2))
+
+  (* make child vertices from both parents based on swap points
+   * TODO?: assumes number of genes before wheels is 4 *)
+  let rec make_child_vertices verts parent1 parent2 swp1 swp2 cur_parent cur_index numverts =
+    if cur_index < numverts then
+      let new_parent = choose_parent swp1 swp2 cur_parent 4+cur_index in
+      let newvert = List.nth (get_parent new_parent parent1 parent2).chassis cur_index in
+      make_child_vertices newvert::verts parent1 parent2 swp1 swp2 new_parent cur_index+1 numverts
+    else
+      verts
+
+  (* make a child using the attributes of two parents of the
+   * previous generation
+   * TODO: assumes that num_genes is 8+4 = 12, indexed from 0-11*)
+  let make_child parent1 parent2 =
+    let swap_points = get_swap_points 12 0 0 in
+    let swp1 = (fst swap_points) in
+    let swp2 = (snd swap_points) in
+    let start_parent = if Random.int 1 in
+    let childwheels_pkg = make_child_wheels parent1 parent2 swp1 swp2 start_parent 0 in
+    let cur_parent = fst childwheels_pkg in
+    let childwheels = snd childwheels_pkg in
+    let childverts = make_child_vertices [] parent1 parent2 swp1 swp2 cur_parent 0 8 in
+    {chassis = childverts; wheels = childwheels}
 
   (* computes euclidean distance between the lists of points
    * precondition: lists are of same length *)
@@ -151,6 +285,6 @@ module RealGenetic : GeneticCarAlgo = struct
      (* now compute averaged euclidean distance *)
      (compute_dist_car_list car_list car 0.) /. (float_of_int (List.length car_list))
 
-end
+end*)
 
 module Genetic = FakeGenetic
