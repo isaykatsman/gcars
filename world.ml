@@ -130,8 +130,11 @@ module RealWorld = struct
           chassis_triangles car.chassis body space;
           (* TODO: Add wheels *)
           (*List.iter (add_wheel car body space) car.wheels; *)
-          let wheel = new cp_body 1.0 1.0 in
-          [{ chassis = body; wheel1 = wheel; wheel2 = wheel }]
+          let wheel1 = new cp_body 1.0 1.0 in
+          let wheel2 = new cp_body 1.0 1.0 in 
+          space#add_body wheel1;
+          space#add_body wheel2;
+          [{ chassis = body; wheel1 = wheel1; wheel2 = wheel2 }]
     | Empty n -> failwith "make_cars with Empty not implemented"
   ;;
 
@@ -152,15 +155,19 @@ module RealWorld = struct
     wheel1#reset_forces;
     wheel2#reset_forces;
     let max_w = -100.0 in
-    let torque = 60000.0 *. (min 1.0 ((wheel1#get_a_vel -. 1.0 *. max_w) /. max_w)) in 
-    wheel1#set_torque (wheel1#get_torque +. torque);
-    wheel2#set_torque (wheel1#get_torque);
+    let torque = 60000.0 *. (min 1.0 ((wheel1#get_a_vel -. 0.1 *. max_w) /. max_w)) in 
+    (* wheel1#set_torque (wheel1#get_torque +. torque); *)
+    (* wheel2#set_torque (wheel1#get_torque); *)
+    (* chassis#set_torque (chassis#get_torque -. torque); *)
+    wheel1#set_a_vel 10.0;
+    chassis#set_a_vel 1.0;
     {wheel1 = wheel1; wheel2 = wheel2; chassis = chassis}::step_cars xs'
 
   let step world = 
-    let substeps = 3 in
+    let substeps = 5 in
     let dt = (1.0 /. 60.0) /. (float substeps) in
     let cars = step_cars world.cars in 
+    print_float ((List.nth cars 0).wheel1#get_a_vel); print_newline ();
     let space = world.space in 
     space#step dt;
     world
@@ -174,7 +181,7 @@ module RealWorld = struct
     | [c] -> 
         let angle = c.chassis#get_angle in
         let pos = vect_of_cpv (c.chassis#get_pos) in
-        let wheel_angles = (0.0, 0.0) in
+        let wheel_angles = (c.wheel1#get_angle, c.wheel2#get_angle) in
         (* TODO: Hardcoded velocity to 0 *)
         let velocity = 0.0 in
         [{velocity = velocity; pos = pos; angle = angle; wheel_angles =
