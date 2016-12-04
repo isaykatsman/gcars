@@ -23,6 +23,8 @@ module type World = sig
 end
 
 module RealWorld = struct
+  let cpv_zero = cpvzero ()
+
   type car_model = {
     chassis : cp_body;
     wheel1 : cp_body;
@@ -75,13 +77,60 @@ module RealWorld = struct
 
     make_terrain_inner len empty_terrain
 
+  let add_chassis_triangle verts body (space : cp_space) : unit =
+    (* Mass is hardcoded *)
+    let mass = 0.625 in
+    let moment = moment_for_poly mass verts cpv_zero in
+    let shape = new cp_shape body (POLY_SHAPE(verts, cpv_zero)) in
+    shape#set_friction 0.5;
+    space#add_shape shape;
+  ;;
+
+  let cpv_of_polar (r, theta) =
+    let x = r *. cos(theta) in
+    let y = r *. sin(theta) in
+    cpv x y
+
+  let chassis_triangles lst body (space : cp_space) : unit =
+    let first_vert = List.hd lst in
+    match lst with
+    | [] -> ()
+    | e::[] -> 
+        let verts = [| 
+          cpv_of_polar e; 
+          cpv_of_polar first_vert;
+          cpv_zero |] in
+        add_chassis_triangle verts body space;
+    | h1::h2::t -> 
+        let verts = [|
+          cpv_of_polar h1;
+          cpv_of_polar h2;
+          cpv_zero |] in
+        add_chassis_triangle verts body space;
+  ;;
+
+  let make_cars (space : cp_space) pop = 
+    match pop with
+    | Population lst ->
+        if (List.length lst) > 1 then
+          failwith "More than 1 car not implemented"
+        else
+          let car = List.hd lst in
+          (* Moment of interia and mass hardcoded *)
+          let body = new cp_body 5.0 3.0 in 
+          (* Hardcode starting position *)
+          body#set_pos (cpv 100.0 100.0);
+          chassis_triangles car.chassis body space;
+          [{ chassis = body; wheel1 = body; wheel2 = body }]
+    | Empty n -> failwith "make_cars with Empty not implemented"
+  ;;
+
   let make pop =
     let space = new cp_space in
     space#set_gravity (cpv 0.0 (-980.0)); 
     let terr = make_terrain 100 space in
-     
-    { cars = []; space = space; terrain = terr }
-     
+    let cars = make_cars space pop in
+    { cars = cars; space = space; terrain = terr }
 end
 
 module FakeWorld = struct
