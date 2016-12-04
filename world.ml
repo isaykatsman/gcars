@@ -78,7 +78,7 @@ module RealWorld = struct
     make_terrain_inner len empty_terrain
 
   let add_chassis_triangle verts body (space : cp_space) : unit =
-    (* Mass is hardcoded *)
+    (* TODO: Cacluate mass from area assuming constant density *)
     let mass = 0.625 in
     let moment = moment_for_poly mass verts cpv_zero in
     let shape = new cp_shape body (POLY_SHAPE(verts, cpv_zero)) in
@@ -108,7 +108,14 @@ module RealWorld = struct
           cpv_zero |] in
         add_chassis_triangle verts body space;
   ;;
-
+(*
+  let add_wheel car_genome body space wheel =
+    let pos_polar = List.nth car_genome.chassis wheel.vert in
+    let pos_cpv = cpv_of_polar pos_polar in
+    let radius = wheel.radius in
+    ()
+*)
+  (* TODO: Support more than 1 car *)
   let make_cars (space : cp_space) pop = 
     match pop with
     | Population lst ->
@@ -116,11 +123,12 @@ module RealWorld = struct
           failwith "More than 1 car not implemented"
         else
           let car = List.hd lst in
-          (* Moment of interia and mass hardcoded *)
+          (* TODO: Cacluate moment of interia and mass for body *)
           let body = new cp_body 5.0 3.0 in 
-          (* Hardcode starting position *)
-          body#set_pos (cpv 100.0 100.0);
+          body#set_pos (cpv 200.0 300.0);
           chassis_triangles car.chassis body space;
+          (* TODO: Add wheels *)
+          (*List.iter (add_wheel car body space) car.wheels; *)
           [{ chassis = body; wheel1 = body; wheel2 = body }]
     | Empty n -> failwith "make_cars with Empty not implemented"
   ;;
@@ -167,12 +175,13 @@ module RealWorld = struct
         let angle = c.chassis#get_angle in
         let pos = vect_of_cpv (c.chassis#get_pos) in
         let wheel_angles = (0.0, 0.0) in
+        (* TODO: Hardcoded velocity to 0 *)
         let velocity = 0.0 in
         [{velocity = velocity; pos = pos; angle = angle; wheel_angles =
           wheel_angles}]
     | _ -> failwith "get_car_state with more than 1 car not implemented"
 
-  (* Dummy implementation *)
+  (* TODO: Dummy implementation *)
   let with_terrain terr pop = make pop
 end
 
