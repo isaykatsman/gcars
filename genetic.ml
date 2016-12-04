@@ -70,7 +70,7 @@ module FakeGenetic = struct
     Population cars
 end
 
-(*module RealGenetic : GeneticCarAlgo = struct
+module RealGenetic : GeneticCarAlgo = struct
   let pi = 3.14159265359
   let max_wheel_radius = 50.0
   let min_wheel_radius = 50.0
@@ -115,16 +115,6 @@ end
     let cars = make_cars size [] in
     Population cars
 
-  (* negative log distribution for parent selection *)
-  let get_parent gen_size =
-    let rand = Random.float 1. in
-    if rand = 0. then
-      0
-    else
-      (* healthy parents assumed to be 0-4, 5 means 62.3% of the
-       * random distribution is covered by the 0-4 values *)
-      (int_of_float (floor(-.1. *. log(rand) *. 5.))) mod gen_size
-
   (* uses swap points to return what parent to use
    * assum there are only 2 parents for a car *)
   let choose_parent swap_point1 swap_point2 cur_parent gene_index =
@@ -156,26 +146,26 @@ end
    * TODO: perturb theta, set as secod coordinate *)
   let mutate_vertex vert p theta =
     let mutatedr = mutate_value (fst vert) p in
-    (mutatedr, (snd vert))
+    (mutatedr, theta)
 
   (* mutate 8 vertices of chassis.
    * use mutation parameters provided by p *)
   let rec mutate_chassis chassis p verts accum =
     match chassis with
     | [] -> verts
-    | h::t -> mutate_chassis t p (mutate_vertex h p accum*.pi/.2.)::verts accum+1
+    | h::t -> mutate_chassis t p ((mutate_vertex h p (accum*.pi/.2.))::verts) (accum+.1.)
 
   (* mutate wheel vert *)
-  let mutate_wheel_vert val num_verts =
-    let wheel = (((Random.int (int_of_float num_verts)) - num_verts)
-                 + val + num_verts) mod num_verts
+  let mutate_wheel_vert value num_verts =
+    let wheel = (((Random.int (int_of_float num_verts)) - (int_of_float num_verts))
+                 + value + (int_of_float num_verts)) mod (int_of_float num_verts)
     in
     wheel
 
   (* mutate a single wheel *)
   let mutate_wheel w p =
     let newr = mutate_value w.radius p in
-    let newv = mutate_wheel_vert w.vert 8 in
+    let newv = mutate_wheel_vert w.vert 8. in
     {radius = newr; vert = newv}
 
   (* mutate wheel radii, with mutation parameters p*)
@@ -189,12 +179,12 @@ end
    * returns the mutated car *)
   let mutate_car car (p:world_params) =
     let p_wheels = {mut_rate = p.mut_rate; mut_range = p.mut_range;
-                    min = wheel_min; range = wheel_range} in
+                    min = p.wheel_min; range = p.wheel_range} in
     let p_chassis = {mut_rate = p.mut_rate; mut_range = p.mut_range;
-                    min = r_min; range = r_range} in
+                    min = p.r_min; range = p.r_range} in
     let prevchassis = car.chassis in
     let prevwheels = car.wheels in
-    let newchassis = List.rev (mutate_chassis prevchassis p_chassis [] 0) in
+    let newchassis = List.rev (mutate_chassis prevchassis p_chassis [] 0.) in
     let newwheels = mutate_wheels prevwheels p_wheels in
     {chassis = newchassis; wheels = newwheels}
 
@@ -233,7 +223,7 @@ end
     if cur_index < numverts then
       let new_parent = choose_parent swp1 swp2 cur_parent 4+cur_index in
       let newvert = List.nth (get_parent new_parent parent1 parent2).chassis cur_index in
-      make_child_vertices newvert::verts parent1 parent2 swp1 swp2 new_parent cur_index+1 numverts
+      make_child_vertices (newvert::verts) parent1 parent2 swp1 swp2 new_parent (cur_index+1) numverts
     else
       verts
 
@@ -244,12 +234,100 @@ end
     let swap_points = get_swap_points 12 0 0 in
     let swp1 = (fst swap_points) in
     let swp2 = (snd swap_points) in
-    let start_parent = if Random.int 1 in
+    let start_parent = Random.int 1 in
     let childwheels_pkg = make_child_wheels parent1 parent2 swp1 swp2 start_parent 0 in
     let cur_parent = fst childwheels_pkg in
     let childwheels = snd childwheels_pkg in
     let childverts = make_child_vertices [] parent1 parent2 swp1 swp2 cur_parent 0 8 in
     {chassis = childverts; wheels = childwheels}
+
+  (* sort from highest to lowest score, so that
+   * list is sorted from healthiest to leaset healthy parents *)
+  let sort_cars pop scores =
+    let car_list = match pop with Empty _ -> [] | Population pop -> pop in
+    (* when mergin we assume that p and s have the same length *)
+    let rec merge_list p s accum =
+      match p with
+      | [] -> accum
+      | h::t -> merge_list t (List.tl s) (((List.hd s), h)::accum)
+    in
+    let merged_list = merge_list car_list scores [] in
+    let sorted_list = List.sort (fun (x,_) (y,_) -> if x > y then -1 else 1)
+                                merged_list in
+    let rec unmerge_list p accum =
+      match p with
+      | [] -> accum
+      | (s,car)::t -> unmerge_list t (car::accum)
+    in
+    let cars_sorted_by_score = unmerge_list sorted_list [] in
+    cars_sorted_by_score
+
+  (* negative log distribution for parent selection *)
+  let generate_parent gen_size =
+    let rand = Random.float 1. in
+    if rand = 0. then
+      0
+    else
+      (* healthy parents assumed to be 0-4, 5 means 62.3% of the
+       * random distribution is covered by the 0-4 values *)
+      (int_of_float (floor(-.1. *. log(rand) *. 5.))) mod gen_size
+
+  (* picks two different random numbers according to log distribution
+   * for parents - emphasizes earlier, higher-scoring parents *)
+  let rec generate_parents gen_size emph p1 p2 =
+    if p1 = p2 then
+      let p1 = generate_parent gen_size in
+      let p2 = generate_parent gen_size in
+      generate_parents gen_size emph p1 p2
+    else
+      (p1, p2)
+
+  (* make gen_size children from parents, selecting two top parents
+   * each time *)
+  let rec generate_children gen_size parent_list decr_gen_size accum =
+    if decr_gen_size > 0 then
+      (* 63.2% of parent distribution skewed toward first 5 *)
+      let (p1, p2) = generate_parents gen_size 5 0 0 in
+      let parent1 = List.nth parent_list p1 in
+      let parent2 = List.nth parent_list p2 in
+      generate_children gen_size parent_list (decr_gen_size-1)
+                        ((make_child parent1 parent2)::accum)
+    else
+      accum
+
+  (* mutate the children with world parameters p *)
+  let rec mutate_children children p accum =
+    match children with
+    | [] -> accum
+    | h::t -> mutate_children t p ((mutate_car h p)::accum)
+
+  (* when make new generation, need initial random generation of
+   * a car list, and then if not initial, need parent selection of
+   * previous generation based on scores *)
+  let new_population pop scores rate =
+    let init = match pop with Empty _ -> true | Population _ -> false in
+    let size = match pop with Empty n -> n | Population lst -> List.length lst in
+    if init then
+      (* randomly initialize first population of cars *)
+      let cars = make_cars size [] in Population cars
+    else
+      (* if generating based off of a previous generation,
+       * need to sort most healthy parents, and then
+       * create new population of children based off of
+       * most healthy parents, and then perturb the genes
+       * of those children according to mutation rate *)
+      let sorted_cars = sort_cars pop scores in
+      (* generate a new generation of 20 children populated with top parents'
+       * genes *)
+      let new_children = generate_children 20 sorted_cars 20 [] in
+      let world_parameters = {mut_rate = 0.05; mut_range = 1.0;
+                              wheel_min = 50.0; wheel_range = 50.0;
+                              r_min = 50.0; r_range = 50.0} in
+      (* according to world_parameters, mutate and perturb the genes of
+       * the children *)
+      let mutated_children = mutate_children new_children world_parameters [] in
+      (* now simply return the new generation of cars in a population variant *)
+      Population mutated_children
 
   (* computes euclidean distance between the lists of points
    * precondition: lists are of same length *)
@@ -285,6 +363,6 @@ end
      (* now compute averaged euclidean distance *)
      (compute_dist_car_list car_list car 0.) /. (float_of_int (List.length car_list))
 
-end*)
+end
 
 module Genetic = FakeGenetic
