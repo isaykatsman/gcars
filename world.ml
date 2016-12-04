@@ -76,7 +76,7 @@ module RealWorld = struct
         
         (* Attach the shape to the body and put it in the space *)
         let shape = new cp_shape terr.body (SEGMENT_SHAPE(cp_prev_v, cp_new_v, 0.0)) in
-        shape#set_layers (int_from_mask 10);
+        shape#set_layers (int_from_mask 11);
         shape#set_friction 1.0;
         shape#set_elasticity 0.0;
         space#add_static_shape shape;
@@ -155,8 +155,8 @@ module RealWorld = struct
           (* TODO: Add wheels *)
           (*List.iter (add_wheel car body space) car.wheels; *)
           let (whinfo1, whinfo2) = car.wheels in 
-          let wheel1 = new cp_body 1.0 1.0 in
-          let wheel2 = new cp_body 1.0 1.0 in 
+          let wheel1 = new cp_body 10.0 10.0 in
+          let wheel2 = new cp_body 10.0 10.0 in 
           wheel1#set_pos (cpvadd body#get_pos (cpv_of_polar ((List.nth car.chassis whinfo1.vert))));
           wheel2#set_pos (cpvadd body#get_pos (cpv_of_polar (List.nth car.chassis whinfo2.vert)));
           space#add_body wheel1;
@@ -169,8 +169,8 @@ module RealWorld = struct
 
           let wheelshape1 = new cp_shape wheel1 (CIRCLE_SHAPE(whinfo1.radius, cpvzero()))
           and wheelshape2 = new cp_shape wheel2 (CIRCLE_SHAPE(whinfo2.radius, cpvzero())) in 
-          wheelshape1#set_friction 1.0;
-          wheelshape2#set_friction 1.0;
+          wheelshape1#set_friction 5.0;
+          wheelshape2#set_friction 5.0;
           wheelshape1#set_layers (int_from_mask 10);
           wheelshape2#set_layers (int_from_mask 10);
           (* wheelshape1#set_elasticity 0.0; *)
@@ -204,7 +204,8 @@ module RealWorld = struct
     (* wheel1#set_torque (wheel1#get_torque +. torque); *)
     (* wheel2#set_torque (wheel1#get_torque); *)
     (* chassis#set_torque (chassis#get_torque -. torque); *)
-    (* wheel1#set_a_vel 10.0; *)
+    wheel1#set_a_vel (~-.100.0);
+    wheel2#set_a_vel (~-.100.0);
     (* chassis#set_a_vel (~-. 10.0); *)
     (* chassis#set_force (cpv 50.0 (0.0)); *)
     {wheel1 = wheel1; wheel2 = wheel2; chassis = chassis}::step_cars xs'
