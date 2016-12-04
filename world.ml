@@ -22,6 +22,14 @@ module type World = sig
   val get_terrain : t -> Vect.t list
 end
 
+let int_from_mask x =
+  let rec f x exp = 
+    match x with
+    | 0 -> 0
+    | x -> (f (x/10) exp*2) +(if x mod 2 == 1 then exp else 0)
+  in
+  f x 1
+
 module RealWorld = struct
   let cpv_zero = cpvzero ()
 
@@ -66,7 +74,8 @@ module RealWorld = struct
         let cp_new_v = cpv_of_vect new_v in
         
         (* Attach the shape to the body and put it in the space *)
-        let shape = new cp_shape terr.body (SEGMENT_SHAPE(cp_prev_v, cp_new_v, 10.0)) in
+        let shape = new cp_shape terr.body (SEGMENT_SHAPE(cp_prev_v, cp_new_v, 0.0)) in
+        shape#set_layers (int_from_mask 10);
         shape#set_friction 1.0;
         shape#set_elasticity 0.0;
         space#add_static_shape shape;
@@ -80,47 +89,6 @@ module RealWorld = struct
     let x = r *. cos(theta) in
     let y = r *. sin(theta) in
     cpv x y
-
-(*
-  let add_wheel car_genome body space wheel =
-    let pos_polar = List.nth car_genome.chassis wheel.vert in
-    let pos_cpv = cpv_of_polar pos_polar in
-    let radius = wheel.radius in
-    ()
-*)
-  let add_chassis_triangle verts body (space : cp_space) : unit =
-    print_string "[|";
-    Array.iter (fun x -> print_string ("("^(string_of_float x.cp_x)^", \
-    "^(string_of_float x.cp_y)^"); "))
-               verts;
-    print_string "|]";
-    print_newline ();
-    let shape = new cp_shape body (POLY_SHAPE(verts, cpv_zero)) in
-    shape#set_friction 0.5;
-    space#add_shape shape;
-  ;;
-
-  let rec chassis_triangles lst body (space : cp_space) : unit =
-    let first_vert = List.hd lst in
-    match lst with
-    | [] -> ()
-    | e::[] -> () 
-        (* TODO: Add back in this triangle. Removed because the verticies
-        are sometimes not in counter-clockwise order which chipmunk requires *)
-        (*
-        let verts = [| 
-          cpv_of_polar e; 
-          cpv_of_polar first_vert;
-          cpv_zero |] in
-        add_chassis_triangle verts body space; *)
-    | h1::h2::t -> 
-        let verts = [|
-          cpv_of_polar h2;
-          cpv_of_polar h1;
-          cpv_zero |] in
-        add_chassis_triangle verts body space;
-        chassis_triangles (h2::t) body space;
-  ;;
 
   (* TODO: Support more than 1 car *)
   let make_cars (space : cp_space) pop = 
@@ -149,6 +117,7 @@ module RealWorld = struct
             let shape = new cp_shape body (POLY_SHAPE(verts, cpv_zero)) in
             shape#set_friction 0.5;
             shape#set_elasticity 0.0;
+            shape#set_layers (int_from_mask 01);
             space#add_shape shape;
           in
           let rec get_chassis_shape lst = 
@@ -189,8 +158,8 @@ module RealWorld = struct
           let wheel2 = new cp_body 1.0 1.0 in 
           wheel1#set_pos (cpvadd body#get_pos (cpv_of_polar ((List.nth car.chassis whinfo1.vert))));
           wheel2#set_pos (cpvadd body#get_pos (cpv_of_polar (List.nth car.chassis whinfo2.vert)));
-          (*space#add_body wheel1;
-          space#add_body wheel2; *)
+          space#add_body wheel1;
+          space#add_body wheel2; 
 
           let j1 = new cp_joint body wheel1 (PIN_JOINT(cpvzero(), cpvzero()))
           and j2 = new cp_joint body wheel2 (PIN_JOINT(cpvzero(), cpvzero())) in
@@ -201,9 +170,11 @@ module RealWorld = struct
           and wheelshape2 = new cp_shape wheel2 (CIRCLE_SHAPE(whinfo2.radius, cpvzero())) in 
           wheelshape1#set_friction 1.0;
           wheelshape2#set_friction 1.0;
+          wheelshape1#set_layers (int_from_mask 10);
+          wheelshape2#set_layers (int_from_mask 10);
           (* wheelshape1#set_elasticity 0.0; *)
-          (*space#add_shape wheelshape1; *)
-          (* space#add_shape wheelshape2; *)
+          space#add_shape wheelshape1; 
+          space#add_shape wheelshape2;
 
           
           [{ chassis = body; wheel1 = wheel1; wheel2 = wheel2 }]
@@ -242,10 +213,10 @@ module RealWorld = struct
     let dt = (1.0 /. 60.0) /. (float substeps) in
     for i=0 to pred substeps do
       let cars = step_cars world.cars in
-      (*
+      
       print_float ((List.nth cars 0).wheel1#get_pos).cp_y; print_string " ";
       print_float ((List.nth cars 0).chassis#get_pos).cp_y; print_newline ();
-      *)
+      
       (* print_float (((List.nth cars 0).wheel1#get_pos).cp_y -. ((List.nth cars 0).chassis#get_pos).cp_y); print_newline (); *)
       let space = world.space in 
       space#step dt;

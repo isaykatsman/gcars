@@ -45,6 +45,7 @@ let parse_opts : sim_options =
 let main () =
   let opts = parse_opts in
   let sim = Simulation.make opts in
+  Random.self_init();
   Simulation.run sim
 
 let () = main ()
