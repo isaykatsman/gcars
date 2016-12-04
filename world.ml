@@ -95,16 +95,16 @@ module RealWorld = struct
     let first_vert = List.hd lst in
     match lst with
     | [] -> ()
-    | e::[] -> 
+    | e::[] -> () (*
         let verts = [| 
           cpv_of_polar e; 
           cpv_of_polar first_vert;
           cpv_zero |] in
-        add_chassis_triangle verts body space;
+        add_chassis_triangle verts body space;*)
     | h1::h2::t -> 
         let verts = [|
-          cpv_of_polar h1;
           cpv_of_polar h2;
+          cpv_of_polar h1;
           cpv_zero |] in
         add_chassis_triangle verts body space;
   ;;
@@ -136,7 +136,22 @@ module RealWorld = struct
     world
 
   let get_terrain t = t.terrain.points
-  let get_car_state t = []
+  
+  let vect_of_cpv v = Vect.make v.cp_x v.cp_y 
+
+  let get_car_state t = 
+    match t.cars with
+    | [c] -> 
+        let angle = c.chassis#get_angle in
+        let pos = vect_of_cpv (c.chassis#get_pos) in
+        let wheel_angles = (0.0, 0.0) in
+        let velocity = 0.0 in
+        [{velocity = velocity; pos = pos; angle = angle; wheel_angles =
+          wheel_angles}]
+    | _ -> failwith "get_car_state with more than 1 car not implemented"
+
+  (* Dummy implementation *)
+  let with_terrain terr pop = make pop
 end
 
 module FakeWorld = struct
@@ -198,5 +213,5 @@ module FakeWorld = struct
     { world with cars = new_states }
 end
 
-module World = FakeWorld
+module World = RealWorld
 
