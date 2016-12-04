@@ -77,37 +77,11 @@ module RealWorld = struct
 
     make_terrain_inner len empty_terrain
 
-  let add_chassis_triangle verts body (space : cp_space ref) : unit =
-    (* TODO: Cacluate mass from area assuming constant density *)
-    let mass = 0.625 in
-    let moment = moment_for_poly mass verts cpv_zero in
-    let shape = new cp_shape !body (POLY_SHAPE(verts, cpv_zero)) in
-    shape#set_friction 0.5;
-    !space#add_shape shape;
-  ;;
-
   let cpv_of_polar (r, theta) =
     let x = r *. cos(theta) in
     let y = r *. sin(theta) in
     cpv x y
 
-  let chassis_triangles lst body (space : cp_space ref) : unit =
-    let first_vert = List.hd lst in
-    match lst with
-    | [] -> ()
-    | e::[] -> () (*
-        let verts = [| 
-          cpv_of_polar e; 
-          cpv_of_polar first_vert;
-          cpv_zero |] in
-        add_chassis_triangle verts body space;*)
-    | h1::h2::t -> 
-        let verts = [|
-          cpv_of_polar h2;
-          cpv_of_polar h1;
-          cpv_zero |] in
-        add_chassis_triangle verts body space;
-  ;;
 (*
   let add_wheel car_genome body space wheel =
     let pos_polar = List.nth car_genome.chassis wheel.vert in
@@ -125,9 +99,47 @@ module RealWorld = struct
           let car = List.hd lst in
           (* TODO: Cacluate moment of interia and mass for body *)
           let body = new cp_body 5.0 3.0 in 
+
+          let add_chassis_triangle verts : unit =
+            let shape_verts = [|
+              cpv (-50.) (-50.);
+              cpv (-50.) ( 50.);
+              cpv ( 50.) ( 50.);
+              cpv ( 50.) (-50.);
+            |] in
+            print_string "[|";
+            Array.iter (fun x -> print_string ("("^(string_of_float x.cp_x)^", \
+            "^(string_of_float x.cp_y)^"); "))
+                       verts;
+            print_string "|]";
+            print_newline ();
+            let shape = new cp_shape body (POLY_SHAPE(verts, cpv_zero)) in
+            shape#set_friction 0.5;
+            space#add_shape shape;
+          in
+
+          let rec chassis_triangles lst : unit =
+            let first_vert = List.hd lst in
+            match lst with
+            | [] -> ()
+            | e::[] -> () (*
+                let verts = [| 
+                  cpv_of_polar e; 
+                  cpv_of_polar first_vert;
+                  cpv_zero |] in
+                add_chassis_triangle verts body space;*)
+            | h1::h2::t -> 
+                let verts = [|
+                  cpv_of_polar h2;
+                  cpv_of_polar h1;
+                  cpv_zero |] in
+                add_chassis_triangle verts;
+                chassis_triangles (h2::t);
+          in
+
           body#set_pos (cpv 200.0 500.0);
           space#add_body body;
-          chassis_triangles car.chassis (ref body) (ref space);
+          chassis_triangles car.chassis;
           (* TODO: Add wheels *)
           (*List.iter (add_wheel car body space) car.wheels; *)
           let wheel1 = new cp_body 1.0 1.0 in
@@ -164,12 +176,14 @@ module RealWorld = struct
     {wheel1 = wheel1; wheel2 = wheel2; chassis = chassis}::step_cars xs'
 
   let step world = 
-    let substeps = 5 in
+    let substeps = 100 in
     let dt = (1.0 /. 60.0) /. (float substeps) in
-    let cars = step_cars world.cars in 
-    print_float ((List.nth cars 0).wheel1#get_a_vel); print_newline ();
-    let space = world.space in 
-    space#step dt;
+    for i=0 to pred substeps do
+      let cars = step_cars world.cars in
+      print_float ((List.nth cars 0).wheel1#get_a_vel); print_newline ();
+      let space = world.space in 
+      space#step dt;
+    done;
     world
 
   let get_terrain t = t.terrain.points
