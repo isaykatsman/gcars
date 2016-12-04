@@ -57,7 +57,7 @@ module RealWorld = struct
         terr
       else
         let prev_v::t = terr.points in
-        let angle = (Random.float pi) -. (pi /. 2.0) in
+        let angle = (Random.float pi /. 2.0) -. (pi /. 4.0) in
         let v = Vect.rot (Vect.make 50.0 0.0) angle in
         let new_v = Vect.add v prev_v in
         let new_points = new_v::prev_v::t in
@@ -69,6 +69,7 @@ module RealWorld = struct
         let shape = new cp_shape terr.body (SEGMENT_SHAPE(cp_prev_v, cp_new_v, 0.0)) in
         shape#set_friction 1.0;
         space#add_static_shape shape;
+        shape#set_elasticity 0.0;
         let new_shapes = shape::terr.shapes in
 
         let new_terr = { terr with points = new_points; shapes = new_shapes } in
@@ -115,6 +116,7 @@ module RealWorld = struct
             print_newline ();
             let shape = new cp_shape body (POLY_SHAPE(verts, cpv_zero)) in
             shape#set_friction 0.5;
+            shape#set_elasticity 10000.0;
             space#add_shape shape;
           in
 
@@ -137,9 +139,13 @@ module RealWorld = struct
                 chassis_triangles (h2::t);
           in
 
-          body#set_pos (cpv 200.0 500.0);
+          body#set_pos (cpv 600.0 500.0);
           space#add_body body;
-          chassis_triangles car.chassis;
+          let shape = new cp_shape body (CIRCLE_SHAPE(50.0, cpvzero ())) in 
+          shape#set_friction 10.0;
+          space#add_shape shape;
+
+          (* chassis_triangles car.chassis; *)
           (* TODO: Add wheels *)
           (*List.iter (add_wheel car body space) car.wheels; *)
           let wheel1 = new cp_body 1.0 1.0 in
@@ -152,7 +158,7 @@ module RealWorld = struct
 
   let make pop =
     let space = new cp_space in
-    space#set_gravity (cpv 0.0 (-980.0)); 
+    space#set_gravity (cpv 0.0 (-900.0)); 
     let terr = make_terrain 100 space in
     let cars = make_cars space pop in
     { cars = cars; space = space; terrain = terr }
@@ -171,8 +177,9 @@ module RealWorld = struct
     (* wheel1#set_torque (wheel1#get_torque +. torque); *)
     (* wheel2#set_torque (wheel1#get_torque); *)
     (* chassis#set_torque (chassis#get_torque -. torque); *)
-    wheel1#set_a_vel 10.0;
-    chassis#set_a_vel 1.0;
+    (* wheel1#set_a_vel 10.0; *)
+    chassis#set_a_vel (~-. 10.0);
+    (* chassis#set_force (cpv 50.0 (0.0)); *)
     {wheel1 = wheel1; wheel2 = wheel2; chassis = chassis}::step_cars xs'
 
   let step world = 
@@ -180,7 +187,7 @@ module RealWorld = struct
     let dt = (1.0 /. 60.0) /. (float substeps) in
     for i=0 to pred substeps do
       let cars = step_cars world.cars in
-      print_float ((List.nth cars 0).wheel1#get_a_vel); print_newline ();
+      print_float ((List.nth cars 0).chassis#get_pos).cp_y; print_newline ();
       let space = world.space in 
       space#step dt;
     done;
