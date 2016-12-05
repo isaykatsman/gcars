@@ -13,7 +13,3 @@ build the bindings, run ./getdependencies.sh. This script has been tested to
 work on the 3110 VM. Then, you can run the project with ./run.sh. Follow the
 on-screen prompts, press <Enter> for each to use the default values for the
 simulation, and after the final prompt the simulation window should pop up.
-
-# User-Configuarable Parameters
-When the program starts, you will be asked to input a mutation rate. This rate
-should be in the range of (0.0, 1.0), exclusive.
