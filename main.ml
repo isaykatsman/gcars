@@ -48,8 +48,8 @@ let parse_stdin_opts =
   print_endline "expected 0.0 - 1.0";
   let line = input_line stdin in
   if line <> "" then config := {!config with mutation_rate = (float_of_string line)};
-  print_endline "Please enter optimization type (or enter for standard)";
-  print_endline "1 for standard, 2 for speed";
+  print_endline "Please enter optimization type (or enter for distance)";
+  print_endline "1 for distance, 2 for speed";
   let line = input_line stdin in
   (if line <> "" then
   let v = (int_of_string line) in
