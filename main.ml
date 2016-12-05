@@ -42,21 +42,22 @@ exception Invalid_evaluation_function
   Arg.parse speclist print_endline usage_msg;
   { mutation_rate = !mutation_rate; num_cars = !num_cars; eval_func = !eval_func } *)
 
-let parse_stdin_opts = 
+let parse_stdin_opts =
   let config = ref {mutation_rate = 0.05; num_cars = 10; eval_func = `LongestDistance} in
   print_endline "Please enter the mutation rate (or enter for default)";
-  let line = input_line stdin in 
+  print_endline "expected 0.0 - 1.0";
+  let line = input_line stdin in
   if line <> "" then config := {!config with mutation_rate = (float_of_string line)};
   print_endline "Please enter optimization type (or enter for standard)";
   print_endline "1 for standard, 2 for speed";
-  let line = input_line stdin in 
-  (if line <> "" then 
-  let v = (int_of_string line) in 
-  if v=1 then config := {!config with eval_func = `LongestDistance} 
+  let line = input_line stdin in
+  (if line <> "" then
+  let v = (int_of_string line) in
+  if v=1 then config := {!config with eval_func = `LongestDistance}
   else if v=2 then config := {!config with eval_func = `ShortestTime});
   !config
-     
-    
+
+
 let main () =
   Random.self_init();
   let opts = parse_stdin_opts in
