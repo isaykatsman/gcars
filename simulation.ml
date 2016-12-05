@@ -93,10 +93,21 @@ module FakeSimulation = struct
                 (progress.greatest_x, 0.0, true)
               else if curr_x > sim.course_end then
                 let () = print_endline "Car finished course" in
+<<<<<<< HEAD
                 (progress.greatest_x, 0.0, true)
               else if curr_x > progress.greatest_x then
                 let () = print_endline "Car is making progress" in
                 (curr_x, min 50.0 (progress.life +. (curr_x -. progress.greatest_x)), false)
+=======
+                (progress.greatest_x, 0, true)
+              else if (curr_x > progress.greatest_x) && (abs_float (curr_x -.
+              progress.greatest_x)) > 2.0  then
+                let () = print_endline ("Car is making progress, greatest: \
+                  "^(string_of_float progress.greatest_x)^", curr: \
+                    "^(string_of_float curr_x)^", y: \
+                      "^(string_of_float (Vect.y state.pos))) in
+                (curr_x, 0, false)
+>>>>>>> c0ae98894861d1f6e4f9a278ca812b80fb8fa288
               else
                 let new_life = progress.life -. 0.2 in
                 let dead = new_life < 0.0 in
@@ -106,7 +117,7 @@ module FakeSimulation = struct
             let new_progress = 
               {greatest_x = new_greatest_x; life = new_life;
                dead = new_dead } in
-            update_prog_inner sim states progresses (new_progress::acc) 
+            update_prog_inner sim states progresses (acc@[new_progress]) 
         | (_, _) -> failwith "Simulation.generation_done: Car state and \
                               progress lists are not the same length" in
     update_prog_inner sim states progress []
@@ -156,13 +167,6 @@ module FakeSimulation = struct
           progress = new_progress } in
 
       sim_ref := new_sim;
-
-      (* let pop = Empty 0 in 
-      let _new_sim = { pop = pop; world = World.make pop; 
-        graphics = Graphics.make pop;
-        opts = sim.opts } in
-    
-      sim_ref := _new_sim *)
   ;;
 
   let run sim = 

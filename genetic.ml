@@ -148,7 +148,7 @@ module RealGenetic : GeneticCarAlgo = struct
    * TODO: perturb theta, set as secod coordinate *)
   let mutate_vertex vert p theta =
     let mutatedr = mutate_value (fst vert) p in
-    (mutatedr, theta)
+    (mutatedr, (snd vert))
 
   (* mutate 8 vertices of chassis.
    * use mutation parameters provided by p *)
@@ -272,7 +272,7 @@ module RealGenetic : GeneticCarAlgo = struct
     else
       (* healthy parents assumed to be 0-4, 5 means 62.3% of the
        * random distribution is covered by the 0-4 values *)
-      (int_of_float (floor(-.1. *. log(rand) *. 5.))) mod gen_size
+      (int_of_float (floor(-.1. *. log(rand) *. 10.))) mod gen_size
 
   (* picks two different random numbers according to log distribution
    * for parents - emphasizes earlier, higher-scoring parents *)
