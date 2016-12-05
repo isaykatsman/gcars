@@ -16,6 +16,7 @@ type sim_options = {
   eval_func : [`LongestDistance | `ShortestTime | `JumpDistance];
   car_vel : float;
   scale : float;
+  gravity : float;
 }
 
 module type Simulation = sig
@@ -62,7 +63,7 @@ module Simulation = struct
 
   let make opts = 
     let pop = Genetic.new_population (Empty opts.num_cars) [] opts.mutation_rate in 
-    let world = World.make pop opts.eval_func opts.car_vel in
+    let world = World.make pop opts.eval_func opts.car_vel opts.gravity in
     let course_end = terr_max_x (World.get_terrain world) in
     { pop = pop; world = world; 
       graphics = Graphics.make pop;
@@ -109,7 +110,7 @@ module Simulation = struct
     in
     match sim.opts.eval_func with
     |`JumpDistance | `LongestDistance -> update_prog_inner sim states progress []
-    | `ShortestTime -> if !sim_time mod 500 = 0 then (sim_time := 1; List.map (fun x -> {x with dead = true}) progress) else (sim_time := !sim_time + 1; progress)
+    | `ShortestTime -> if !sim_time mod 800 = 0 then (sim_time := 1; List.map (fun x -> {x with dead = true}) progress) else (sim_time := !sim_time + 1; progress)
     
 
  

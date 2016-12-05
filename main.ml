@@ -43,13 +43,13 @@ exception Invalid_evaluation_function
   { mutation_rate = !mutation_rate; num_cars = !num_cars; eval_func = !eval_func } *)
 
 let parse_stdin_opts =
-  let config = ref {mutation_rate = 0.05; num_cars = 10; eval_func = `LongestDistance; car_vel = 10.0; scale = 1.0} in
+  let config = ref {mutation_rate = 0.10; num_cars = 10; eval_func = `LongestDistance; car_vel = 10.0; scale = 1.0; gravity = 1.0;} in
   print_endline 
 "**********************
 * OCaml Genetic Cars *
 **********************";
 
-  print_endline "Enter the mutation rate (or Enter for default, 0.05)
+  print_endline "Enter the mutation rate (or Enter for default, 0.10)
 The mutation rate should be in the range (0.0, 1.0) exclusive";
   print_string "> ";
   flush stdout;
@@ -58,7 +58,7 @@ The mutation rate should be in the range (0.0, 1.0) exclusive";
   if line <> "" then config := {!config with mutation_rate = (float_of_string line)};
 
   print_endline "Enter evaluation function (or Enter for default, 1)
-1 Longest Distance (Terrain will be rugged)
+1 Longest Distance (Terrain will be rugged. Cars are evaluated)
 2 Shortest Time (Terrain will be relatively flat)
 3 Longest Jump (Lead up to a ramp. Try it with a higher velocity!)";
   print_string "> ";
@@ -82,6 +82,11 @@ The mutation rate should be in the range (0.0, 1.0) exclusive";
   (if line <> "" then 
   let v = (float_of_string line) in 
   config := {!config with scale = v});
+  print_endline "Please enter a gravity scale (or enter for standard 1.0)";
+  let line = input_line stdin in 
+  (if line <> "" then
+  let v = (float_of_string line) in 
+  config := {!config with gravity = v});
   !config
 
 

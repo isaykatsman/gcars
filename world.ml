@@ -219,11 +219,11 @@ module RealWorld = struct
     | Empty n -> failwith "make_cars with Empty not implemented"
   ;;
 
-  let make pop eval_func vel=
+  let make pop eval_func vel gravity=
     car_vel := (~-. vel);
     let space = new cp_space in
     init_chipmunk ();
-    space#set_gravity (cpv 0.0 (-980.0)); 
+    space#set_gravity (cpv 0.0 (-980.0*.gravity)); 
     let terr = make_terrain 10000 space eval_func in
     let cars = make_cars space pop in
     { cars = cars; space = space; terrain = terr }
