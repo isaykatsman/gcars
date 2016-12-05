@@ -47,7 +47,6 @@ module FakeGenetic = struct
       chassis
 
   let make_car () =
-    let fake_r = 100.0 in
     let w1_vert = Random.int 7 in
     let rec diff_gen_random prev =
       let cur = Random.int 7 in
@@ -73,7 +72,6 @@ module FakeGenetic = struct
       match pop with
       | Empty n -> n
       | Population lst -> List.length lst in
-    let w1_vert = Random.int 7 in
     let cars = make_cars size [] in
     Population cars
 end
