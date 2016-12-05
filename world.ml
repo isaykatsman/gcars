@@ -223,7 +223,7 @@ module RealWorld = struct
     {wheel1 = wheel1; wheel2 = wheel2; chassis = chassis}::step_cars xs'
 
   let step world = 
-    let substeps = 100 in
+    let substeps = 10 in
     let dt = (1.0 /. 60.0) /. (float substeps) in
     for i=0 to pred substeps do
       let cars = step_cars world.cars in
