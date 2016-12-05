@@ -26,6 +26,9 @@ end
 let mask_offset v car_n = 
   int_of_float ((float_of_int v)*.2.0**(float_of_int (car_n*3)))
 
+let body_density = 1.0
+let wheel_density = 0.5
+
 module RealWorld = struct
   let cpv_zero = cpvzero ()
 
@@ -90,17 +93,23 @@ module RealWorld = struct
         for i = 0 to (List.length lst)-1 do 
           let car = List.nth lst i in
           (* TODO: Cacluate moment of interia and mass for body *)
-          let body = new cp_body 10.0 100.0 in 
+          let rec polyArea lst acc =
+            match lst with
+            | a::b::xs' -> let x = cpv_of_polar a and y = cpv_of_polar b in
+              polyArea (b::xs') (acc +. (y.cp_x +. x.cp_x)*.(y.cp_y -. x.cp_y))
+            | x::[] -> acc/.2.0
+            | [] -> acc/.2.0
+          in
+          let body_area = polyArea (car.chassis@([List.hd car.chassis])) 0.0 in  
+          (* let body_mass = polyArea [(1.0,0.0);(1.0,pi/.2.0);(1.0,pi);(1.0,(3.0*.pi/.2.0));(1.0,0.0)] 0.0 in  *)
+          print_float body_area; print_endline " test";
+          let body_mass = body_area *. body_density in 
+          let body_inertia = moment_for_poly body_mass (car.chassis |> List.map (fun x -> cpv_of_polar x) |> Array.of_list) (cpvzero()) in 
+          let body = new cp_body body_mass body_inertia in 
           let sort a b = 
             int_of_float (b.cp_y *. a.cp_x -. a.cp_y *. b.cp_x)
           in
           let add_chassis_triangle verts : unit =
-         (*    print_string "[|";
-            Array.iter (fun x -> print_string ("("^(string_of_float x.cp_x)^", \
-            "^(string_of_float x.cp_y)^"); "))
-                       verts;
-            print_string "|]";
-            print_newline (); *)
             Array.sort sort verts;
             let shape = new cp_shape body (POLY_SHAPE(verts, cpv_zero)) in
             shape#set_friction 2.0;
@@ -111,8 +120,6 @@ module RealWorld = struct
           let rec get_chassis_shape lst = 
             let first_vert = List.hd lst in
             let rec chassis_triangles lst =
-              
-              print_string "first: "; print_float (fst first_vert); 
               match lst with
               | [] -> ()
               | e::[] -> 
@@ -140,8 +147,10 @@ module RealWorld = struct
           (* TODO: Add wheels *)
           (*List.iter (add_wheel car body space) car.wheels; *)
           let (whinfo1, whinfo2) = car.wheels in 
-          let wheel1 = new cp_body 1.0 100.0 in
-          let wheel2 = new cp_body 1.0 100.0 in 
+          let wheel1_mass = pi*.(whinfo1.radius *. whinfo1.radius)*.wheel_density 
+          and wheel2_mass =  pi*.(whinfo2.radius *. whinfo2.radius)*.wheel_density in
+          let wheel1 = new cp_body wheel1_mass (moment_for_circle wheel1_mass whinfo1.radius 0.0 (cpvzero())) in
+          let wheel2 = new cp_body wheel2_mass (moment_for_circle wheel2_mass whinfo2.radius 0.0 (cpvzero())) in 
           wheel1#set_pos (cpvadd body#get_pos (cpv_of_polar ((List.nth car.chassis whinfo1.vert))));
           wheel2#set_pos (cpvadd body#get_pos (cpv_of_polar (List.nth car.chassis whinfo2.vert)));
           space#add_body wheel1;
