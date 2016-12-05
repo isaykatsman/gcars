@@ -187,6 +187,7 @@ module RealGenetic : GeneticCarAlgo = struct
     let prevchassis = car.chassis in
     let prevwheels = car.wheels in
     let newchassis = List.rev (mutate_chassis prevchassis p_chassis [] 0.) in
+    let newchassis = List.sort (fun x y -> int_of_float ((snd y)-.(snd x))) newchassis in 
     let newwheels = mutate_wheels prevwheels p_wheels in
     {chassis = newchassis; wheels = newwheels}
 
