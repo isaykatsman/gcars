@@ -327,8 +327,8 @@ module RealGenetic : GeneticCarAlgo = struct
       let sorted_cars = sort_cars pop scores in
       (* generate a new generation of 20 children populated with top parents'
        * genes *)
-      let new_children = generate_children 20 sorted_cars 20 [] in
-      let world_parameters = {mut_rate = 0.05; mut_range = 1.0;
+      let new_children = generate_children size sorted_cars size [] in
+      let world_parameters = {mut_rate = rate; mut_range = 1.0;
                               wheel_min = 50.0; wheel_range = 50.0;
                               r_min = 50.0; r_range = 50.0} in
       (* according to world_parameters, mutate and perturb the genes of

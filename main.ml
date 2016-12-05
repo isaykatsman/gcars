@@ -20,7 +20,7 @@ open Simulation
 
 exception Invalid_evaluation_function
 let parse_opts : sim_options =
-  let mutation_rate = ref 5.0 in
+  let mutation_rate = ref 0.05 in
   let num_cars = ref 10 in
   let eval_func = ref LongestDistance in
   let parse_eval_f s =
