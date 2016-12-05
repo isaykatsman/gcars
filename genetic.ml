@@ -47,7 +47,7 @@ module FakeGenetic = struct
       chassis
 
   let make_car () =
-    let fake_r = 100.0 in 
+    let fake_r = 100.0 in
     let w1_vert = Random.int 7 in
     let rec diff_gen_random prev =
       let cur = Random.int 7 in 
