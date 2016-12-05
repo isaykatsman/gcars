@@ -59,7 +59,8 @@ The mutation rate should be in the range (0.0, 1.0) exclusive";
 
   print_endline "Enter evaluation function (or Enter for default, 1)
 1 Longest Distance (Terrain will be rugged)
-2 Shortest Time (Terrain will be relatively flat)";
+2 Shortest Time (Terrain will be relatively flat)
+3 Longest Jump (Lead up to a ramp. Try it with a higher velocity!)";
   print_string "> ";
   flush stdout;
 
