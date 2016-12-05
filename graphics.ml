@@ -144,8 +144,10 @@ module Graphics = struct
     | ((w1, w2), (w1_angle, w2_angle)) -> 
         let in_color = (0.7, 0.7, 0.7) in
         let out_color = (0.4, 0.4, 0.4) in
-        draw_wheel (wheel_pos w1) w1.radius w1_angle in_color out_color;
-        draw_wheel (wheel_pos w2) w2.radius w2_angle in_color out_color;
+        let w1_pos = List.nth state.wheel_positions 0 in
+        let w2_pos = List.nth state.wheel_positions 1 in
+        draw_wheel w1_pos  w1.radius w1_angle in_color out_color;
+        draw_wheel w2_pos w2.radius w2_angle in_color out_color;
   ;;
 
   let darken (c1, c2, c3) =

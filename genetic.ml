@@ -49,12 +49,18 @@ module FakeGenetic = struct
   let make_car () =
     let fake_r = 100.0 in
     let w1_vert = Random.int 7 in
+    let rec diff_gen_random prev =
+      let cur = Random.int 7 in 
+      if cur <> prev then cur
+      else diff_gen_random prev 
+    in
+    let w2_vert = diff_gen_random w1_vert in 
     {
       chassis = make_chassis 8 [];
       (* chassis = [(fake_r,0.0);(fake_r,pi/.2.0);(fake_r,pi);(fake_r, 3.0*.pi/.2.0)]; *)
       wheels = (
-        {radius=25.0; vert = w1_vert    },
-        {radius=25.0; vert = w1_vert + 1}
+        {radius=50.0; vert = w1_vert},
+        {radius=50.0; vert = w2_vert}
       )
     }
 
