@@ -97,7 +97,8 @@ module FakeSimulation = struct
               else if curr_x > progress.greatest_x then
                 let () = print_endline ("Car is making progress, greatest: \
                   "^(string_of_float progress.greatest_x)^", curr: \
-                    "^(string_of_float curr_x)) in
+                    "^(string_of_float curr_x)^", y: \
+                      "^(string_of_float (Vect.y state.pos))) in
                 (curr_x, 0, false)
               else
                 let new_timer = progress.timer + 1 in
