@@ -71,7 +71,7 @@ module Graphics = struct
     
   let rec get_furthest_car cars furthest =
     match cars with
-   | [] -> furthest
+    | [] -> furthest
     | h::t -> 
         let new_furthest = 
           if (Vect.x h.pos) > (Vect.x furthest.pos) then h

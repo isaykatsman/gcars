@@ -95,7 +95,9 @@ module FakeSimulation = struct
                 let () = print_endline "Car finished course" in
                 (progress.greatest_x, 0, true)
               else if curr_x > progress.greatest_x then
-                let () = print_endline "Car is making progress" in
+                let () = print_endline ("Car is making progress, greatest: \
+                  "^(string_of_float progress.greatest_x)^", curr: \
+                    "^(string_of_float curr_x)) in
                 (curr_x, 0, false)
               else
                 let new_timer = progress.timer + 1 in
@@ -106,7 +108,7 @@ module FakeSimulation = struct
             let new_progress = 
               {greatest_x = new_greatest_x; timer = new_timer;
                dead = new_dead } in
-            update_prog_inner sim states progresses (new_progress::acc) 
+            update_prog_inner sim states progresses (acc@[new_progress]) 
         | (_, _) -> failwith "Simulation.generation_done: Car state and \
                               progress lists are not the same length" in
     update_prog_inner sim states progress []
@@ -156,13 +158,6 @@ module FakeSimulation = struct
           progress = new_progress } in
 
       sim_ref := new_sim;
-
-      (* let pop = Empty 0 in 
-      let _new_sim = { pop = pop; world = World.make pop; 
-        graphics = Graphics.make pop;
-        opts = sim.opts } in
-    
-      sim_ref := _new_sim *)
   ;;
 
   let run sim = 
