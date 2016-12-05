@@ -80,23 +80,25 @@ end
 
 module RealGenetic : GeneticCarAlgo = struct
   let pi = 3.14159265359
-  let max_wheel_radius = 50.0
-  let min_wheel_radius = 50.0
-  let gen_size = 20
+  let min_r = 50.0
+  let r_range = 50.0
+  (* let gen_size = 20 *)
 
   (* remember entire module only responsible for generating a new population,
    * based on scoring metric. also determines similarity rating as a
    * sanity check. *)
 
+  (* make chassis by randomly selecting coordinates in polar *)
   let rec make_chassis n acc =
     if n > 0 then
       let angle = Random.float (2.0 *. pi) in
-      let radius = (Random.float max_wheel_radius) +. min_wheel_radius in
+      let radius = (Random.float 50.0) +. 50.0 in
       make_chassis (n-1) ((radius, angle)::acc)
     else
       let chassis = List.sort (fun x y -> compare (snd x) (snd y)) acc in
       chassis
 
+  (* randomly generate a single car *)
   let make_car () =
     let w1_vert = Random.int 8 in
     let w2_vert_tmp = Random.int 8 in
@@ -105,23 +107,15 @@ module RealGenetic : GeneticCarAlgo = struct
     {
       chassis = make_chassis 8 [];
       wheels = (
-        {radius=(Random.float 25.0) +. 10.0; vert = w1_vert },
-        {radius=(Random.float 25.0) +. 10.0; vert = w2_vert }
+        {radius=(Random.float 25.0) +. 25.0; vert = w1_vert },
+        {radius=(Random.float 25.0) +. 25.0; vert = w2_vert }
       )
     }
 
+  (* randomly generate initial population of cars *)
   let rec make_cars n acc =
     if n = 0 then acc
     else make_cars (n - 1) ((make_car ())::acc)
-
-  let new_population pop scores rate =
-    let size =
-      match pop with
-      | Empty n -> n
-      | Population lst -> List.length lst in
-    let w1_vert = Random.int 7 in
-    let cars = make_cars size [] in
-    Population cars
 
   (* uses swap points to return what parent to use
    * assum there are only 2 parents for a car *)
@@ -329,7 +323,7 @@ module RealGenetic : GeneticCarAlgo = struct
        * genes *)
       let new_children = generate_children size sorted_cars size [] in
       let world_parameters = {mut_rate = rate; mut_range = 1.0;
-                              wheel_min = 50.0; wheel_range = 50.0;
+                              wheel_min = 25.0; wheel_range = 25.0;
                               r_min = 50.0; r_range = 50.0} in
       (* according to world_parameters, mutate and perturb the genes of
        * the children *)
@@ -373,4 +367,4 @@ module RealGenetic : GeneticCarAlgo = struct
 
 end
 
-module Genetic = FakeGenetic
+module Genetic = RealGenetic
