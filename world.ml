@@ -17,19 +17,11 @@ type car_state = {
 module type World = sig
   type t
   val make : population -> t
-  val with_terrain : (Vect.t list) -> population -> t
+  val with_terrain : t -> population -> t
   val step : t -> t
   val get_car_state : t -> car_state list
   val get_terrain : t -> Vect.t list
 end
-
-let int_from_mask x =
-  let rec f x exp = 
-    match x with
-    | 0 -> 0
-    | x -> (f (x/10) exp*2) +(if x mod 2 == 1 then exp else 0)
-  in
-  f x 1
 
 let mask_offset v car_n = 
   int_of_float ((float_of_int v)*.2.0**(float_of_int (car_n*3)))
@@ -46,7 +38,6 @@ module RealWorld = struct
   type terrain = {
     points : Vect.t list;
     body : cp_body;
-    shapes: cp_shape list;
   }
 
   type t = {
@@ -59,9 +50,8 @@ module RealWorld = struct
 
   let make_terrain len (space : cp_space) =
     let empty_terrain = {
-      points = [Vect.origin];
+      points = [Vect.make ~-.1000.0 0.0];
       body = new cp_body infinity infinity;
-      shapes = [];
     } in
 
     let rec make_terrain_inner n terr =
@@ -79,12 +69,10 @@ module RealWorld = struct
         
         (* Attach the shape to the body and put it in the space *)
         let shape = new cp_shape terr.body (SEGMENT_SHAPE(cp_prev_v, cp_new_v, 0.0)) in
-        (* shape#set_layers (int_from_mask 111); *)
         shape#set_friction 1.0;
         shape#set_elasticity 0.0;
         space#add_static_shape shape;
-        let new_shapes = shape::terr.shapes in
-        let new_terr = { terr with points = new_points; shapes = new_shapes } in
+        let new_terr = { terr with points = new_points} in
         make_terrain_inner (n - 1) new_terr 
     in 
     make_terrain_inner len empty_terrain
@@ -146,14 +134,14 @@ module RealWorld = struct
             chassis_triangles lst
           in
 
-          body#set_pos (cpv 100.0 ((float_of_int i) *. 100.0 +. 200.0));
+          body#set_pos (cpv 100.0 300.0);
           space#add_body body;
           get_chassis_shape car.chassis;
           (* TODO: Add wheels *)
           (*List.iter (add_wheel car body space) car.wheels; *)
           let (whinfo1, whinfo2) = car.wheels in 
-          let wheel1 = new cp_body 10.0 10.0 in
-          let wheel2 = new cp_body 10.0 10.0 in 
+          let wheel1 = new cp_body 1.0 100.0 in
+          let wheel2 = new cp_body 1.0 100.0 in 
           wheel1#set_pos (cpvadd body#get_pos (cpv_of_polar ((List.nth car.chassis whinfo1.vert))));
           wheel2#set_pos (cpvadd body#get_pos (cpv_of_polar (List.nth car.chassis whinfo2.vert)));
           space#add_body wheel1;
@@ -180,8 +168,6 @@ module RealWorld = struct
           wheelshape2#set_friction 1.0;
           wheelshape1#set_layers (mask_offset 2 i);
           wheelshape2#set_layers (mask_offset 4 i);
-          print_int (wheelshape1#get_layers); print_endline " wheel layer";
-          (* wheelshape1#set_elasticity 0.0; *)
           space#add_shape wheelshape1; 
           space#add_shape wheelshape2;
           car_list := { chassis = body; wheel1 = wheel1; wheel2 = wheel2 }::(!car_list)
@@ -194,7 +180,7 @@ module RealWorld = struct
     let space = new cp_space in
     init_chipmunk ();
     space#set_gravity (cpv 0.0 (-980.0)); 
-    let terr = make_terrain 100 space in
+    let terr = make_terrain 500 space in
     let cars = make_cars space pop in
     { cars = cars; space = space; terrain = terr }
 
@@ -214,14 +200,14 @@ module RealWorld = struct
     (* wheel2#set_torque (wheel1#get_torque); *)
     (* print_float (wheel1#get_torque); print_endline (" torque "); *)
     (* chassis#set_torque (chassis#get_torque -. torque); *)
-    wheel1#set_a_vel (~-.50.0);
-    wheel2#set_a_vel (~-.50.0);
+    wheel1#set_a_vel (~-.20.0);
+    wheel2#set_a_vel (~-.20.0);
     (* chassis#set_a_vel (~-. 10.0); *)
     (* chassis#set_force (cpv 50.0 (0.0)); *)
     {wheel1 = wheel1; wheel2 = wheel2; chassis = chassis}::step_cars xs'
 
   let step world = 
-    let substeps = 10 in
+    let substeps = 100 in
     let dt = (1.0 /. 60.0) /. (float substeps) in
     for i=0 to pred substeps do
       let cars = step_cars world.cars in
@@ -256,8 +242,30 @@ module RealWorld = struct
     in
     List.rev (get_cars t.cars)
 
-  (* TODO: Dummy implementation *)
-  let with_terrain terr pop = make pop
+  let gen_shape_from_points (space : cp_space) pts =
+    let body = new cp_body infinity infinity in
+    let rec gen_shapes = function
+    | [] -> ()
+    | x::[] -> ()
+    | x::y::xs' -> 
+      let shape = new cp_shape body (SEGMENT_SHAPE(cpv_of_vect x, cpv_of_vect y, 0.0)) in
+      shape#set_friction 1.0;
+      shape#set_elasticity 0.0;
+      space#add_static_shape shape;
+      gen_shapes (y::xs')
+    in
+    gen_shapes pts
+
+  let with_terrain world pop = 
+    let space = new cp_space in
+    init_chipmunk ();
+    space#set_gravity (cpv 0.0 (-980.0));
+    gen_shape_from_points space world.terrain.points; 
+    let cars = make_cars space pop in
+    { cars = cars; space = space; terrain = world.terrain}
+
+
+    
 end
 module World = RealWorld
 
