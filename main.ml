@@ -19,31 +19,10 @@ open Simulation
 *)
 
 exception Invalid_evaluation_function
-(* let parse_opts : sim_options =
-  let mutation_rate = ref 0.05 in
-  let num_cars = ref 10 in
-  let eval_func = ref `LongestDistance in
-  let parse_eval_f s =
-    match s with
-    | "ld" -> LongestDistance
-    | "st" -> ShortestTime
-    | _ -> raise Invalid_evaluation_function in
-  let speclist = [
-    ("-n", Arg.Int (fun n -> num_cars := n), "Number of cars per generation. \
-    Default is 10.");
-    ("-r", Arg.Float (fun r -> mutation_rate := r), "Mutation rate for genetic \
-    algorithm. Default is 5.0.");
-    ("-f", Arg.String (fun s -> eval_func := (parse_eval_f s)), "The name of \
-    the evaluation function to use for the genetic algorithm. Options are 'ld' \
-    for Longest Distance, or 'st' for Shortest Time. Default is Longest \
-    Distance.");
-  ] in
-  let usage_msg = "OCaml Genetic Cars" in
-  Arg.parse speclist print_endline usage_msg;
-  { mutation_rate = !mutation_rate; num_cars = !num_cars; eval_func = !eval_func } *)
 
 let parse_stdin_opts =
-  let config = ref {mutation_rate = 0.05; num_cars = 10; eval_func = `LongestDistance; car_vel = 10.0; scale = 1.0} in
+  let config = ref {mutation_rate = 0.05; num_cars = 10; eval_func =
+    `LongestDistance; car_vel = 20.0; scale = 1.0} in
   print_endline 
 "**********************
 * OCaml Genetic Cars *
@@ -60,7 +39,7 @@ The mutation rate should be in the range (0.0, 1.0) exclusive";
   print_endline "Enter evaluation function (or Enter for default, 1)
 1 Longest Distance (Terrain will be rugged)
 2 Shortest Time (Terrain will be relatively flat)
-3 Longest Jump (Lead up to a ramp. Try it with a higher velocity!)";
+3 Longest Jump (Terrain will be a big ramp. Try it with a higher velocity!)";
   print_string "> ";
   flush stdout;
 
@@ -70,14 +49,22 @@ The mutation rate should be in the range (0.0, 1.0) exclusive";
   if v=1 then config := {!config with eval_func = `LongestDistance} 
   else if v=2 then config := {!config with eval_func = `ShortestTime}
   else if v=3 then config := {!config with eval_func = `JumpDistance});
-  print_endline "Please enter speed of car (or enter for standard 10.0)";
+  print_endline "Enter speed of car (or Enter for default, 20.0)";
+  print_string "> ";
+  flush stdout;
+
   let line = input_line stdin in 
   (if line <> "" then
   let v = (float_of_string line) in 
   config := {!config with car_vel = v};
   );
-  print_endline "Please enter a scale for the view. We suggest 0.5 or 0.2 if you chose jump (or enter for standard scale).";
-  print_endline "Do note that any scale other than 1 will break the HUD";
+  print_endline "Enter a scale for the view. We suggest 0.5 or 0.2 if you chose
+  jump (or Enter for default, 1.0";
+  print_endline "Do note that any scale other than 1.0 will cause the HUD to
+  scale as well.";
+  print_string "> ";
+  flush stdout;
+
   let line = input_line stdin in 
   (if line <> "" then 
   let v = (float_of_string line) in 
