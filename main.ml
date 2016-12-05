@@ -76,12 +76,12 @@ The mutation rate should be in the range (0.0, 1.0) exclusive";
   let v = (float_of_string line) in 
   config := {!config with car_vel = v};
   );
-  print_endline "Please enter a scale for the view. Higher scale makes the cars smaller. (or enter for standard scale).";
+  print_endline "Please enter a scale for the view. We suggest 0.5 or 0.2 if you chose jump (or enter for standard scale).";
   print_endline "Do note that any scale other than 1 will break the HUD";
   let line = input_line stdin in 
   (if line <> "" then 
   let v = (float_of_string line) in 
-  config := {!config with scale = 1.0/.v});
+  config := {!config with scale = v});
   !config
 
 
