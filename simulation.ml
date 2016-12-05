@@ -82,21 +82,21 @@ module Simulation = struct
             let (new_greatest_x, new_life, new_dead) = 
               let curr_x = Vect.x state.pos in
               if progress.dead then 
-                (* let () = print_endline "Car is dead" in *)
+                let () = print_endline "Car is dead" in 
                 (progress.greatest_x, 0.0, true)
               else if curr_x > sim.course_end then
-                (* let () = print_endline "Car finished course" in *)
+                let () = print_endline "Car finished course" in
                 (progress.greatest_x, 0.0, true)
               else if curr_x > progress.greatest_x then
-            (*     let () =  print_endline ("Life: "^(string_of_float progress.life)^", \
-                Dead: false") in *)
+                let () =  print_endline ("Life: "^(string_of_float progress.life)^", \
+                Dead: false") in
                 let dead = progress.life < 0.0 in 
                 (curr_x, min 50.0 (progress.life +. (curr_x -. progress.greatest_x) -. 0.2), dead)
               else
                 let new_life = progress.life -. 0.2 in
                 let dead = new_life < 0.0 in
-              (*   print_endline ("Life: "^(string_of_float new_life)^", \
-                Dead: "^(string_of_bool dead)); *)
+                print_endline ("Life: "^(string_of_float new_life)^", \
+                Dead: "^(string_of_bool dead));
                 (progress.greatest_x, new_life, dead) in
             let new_progress = 
               {greatest_x = new_greatest_x; life = new_life;

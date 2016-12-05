@@ -6,6 +6,7 @@ type car_state = {
   pos : Vect.t;
   angle : float; (* in radians *)
   wheel_angles : float * float;
+  wheel_positions : Vect.t list;
 } 
 
 module type World = sig
@@ -16,7 +17,7 @@ module type World = sig
   val make : population -> t
 
   (* Creates a new world with the specified terrain and cars *)
-  val with_terrain : (Vect.t list) -> population -> t
+  val with_terrain : t -> population -> t
 
   (* Steps the physics simulation forward one timestep *)
   val step : t -> t
@@ -29,4 +30,4 @@ module type World = sig
 end
 
 module World : World
-module FakeWorld : World
+(* module FakeWorld : World *)
