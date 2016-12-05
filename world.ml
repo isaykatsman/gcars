@@ -38,7 +38,6 @@ module RealWorld = struct
   type terrain = {
     points : Vect.t list;
     body : cp_body;
-    shapes: cp_shape list;
   }
 
   type t = {
@@ -51,9 +50,8 @@ module RealWorld = struct
 
   let make_terrain len (space : cp_space) =
     let empty_terrain = {
-      points = [Vect.origin];
+      points = [Vect.make ~-.1000.0 0.0];
       body = new cp_body infinity infinity;
-      shapes = [];
     } in
 
     let rec make_terrain_inner n terr =
@@ -74,8 +72,7 @@ module RealWorld = struct
         shape#set_friction 1.0;
         shape#set_elasticity 0.0;
         space#add_static_shape shape;
-        let new_shapes = shape::terr.shapes in
-        let new_terr = { terr with points = new_points; shapes = new_shapes } in
+        let new_terr = { terr with points = new_points} in
         make_terrain_inner (n - 1) new_terr 
     in 
     make_terrain_inner len empty_terrain
@@ -137,7 +134,7 @@ module RealWorld = struct
             chassis_triangles lst
           in
 
-          body#set_pos (cpv 100.0 ((float_of_int i) *. 100.0 +. 200.0));
+          body#set_pos (cpv 100.0 300.0);
           space#add_body body;
           get_chassis_shape car.chassis;
           (* TODO: Add wheels *)
@@ -183,7 +180,7 @@ module RealWorld = struct
     let space = new cp_space in
     init_chipmunk ();
     space#set_gravity (cpv 0.0 (-980.0)); 
-    let terr = make_terrain 100 space in
+    let terr = make_terrain 500 space in
     let cars = make_cars space pop in
     { cars = cars; space = space; terrain = terr }
 

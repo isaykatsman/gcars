@@ -105,8 +105,8 @@ module RealGenetic : GeneticCarAlgo = struct
     {
       chassis = make_chassis 8 [];
       wheels = (
-        {radius=(Random.float 30.0) +. 10.0; vert = w1_vert },
-        {radius=(Random.float 30.0) +. 10.0; vert = w2_vert }
+        {radius=(Random.float 25.0) +. 10.0; vert = w1_vert },
+        {radius=(Random.float 25.0) +. 10.0; vert = w2_vert }
       )
     }
 

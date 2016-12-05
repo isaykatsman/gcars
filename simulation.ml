@@ -45,7 +45,7 @@ module FakeSimulation = struct
     let pop = Genetic.new_population (Empty opts.num_cars) [] opts.mutation_rate in 
     { pop = pop; world = World.make pop; 
       graphics = Graphics.make pop;
-      opts = opts; prev_max_scores = [] }
+      opts = opts; prev_max_scores = [0.0] }
 
   let counter = ref 0
   (* This function will check if the evaluation of a generation is done (all
