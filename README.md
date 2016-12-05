@@ -1,4 +1,10 @@
-# gcars
-CS3110 Final Project - Genetic Cars in OCaml. Made with the Chipmunk2D physics library for collision detection/simulation.
+# OCaml Genetic Cars
+Our final project is a genetic algorithm that optimizes a 2D car design. It was
+made with the Chipmunk2D physics library for collision detection/simulation. 
 
-In order to run the demo, build glMLite and Chipmunk (install dependencies for OpenGL and chipmunk-dev), and copy the build files to the root _build folder of the gcars repo.
+# Running the Project
+First, you will need to install the dependencies for Chipmunk2D and OpenGL.
+(We should provide a script to do this inside the 3110 VM).
+
+Then, run the build_deps.sh script to build the dependencies.
+You can then run the project by running the run.sh script.
