@@ -107,7 +107,7 @@ module Simulation = struct
     in
     match sim.opts.eval_func with
     | `LongestDistance -> update_prog_inner sim states progress []
-    | `ShortestTime -> print_int (!sim_time);if !sim_time mod 500 = 0 then (sim_time := 1; List.map (fun x -> {x with dead = true}) progress) else (sim_time := !sim_time + 1; progress)
+    | `ShortestTime -> if !sim_time mod 500 = 0 then (sim_time := 1; List.map (fun x -> {x with dead = true}) progress) else (sim_time := !sim_time + 1; progress)
 
  
   (* This function will check if the evaluation of a generation is done (all

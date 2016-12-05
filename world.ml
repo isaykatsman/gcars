@@ -88,7 +88,7 @@ module RealWorld = struct
     (* make_terrain_inner len empty_terrain 1.5  *)
     match eval_func with
     | `LongestDistance -> make_terrain_inner len empty_terrain 1.5
-    | `ShortestTime -> make_terrain_inner len empty_terrain 100.0
+    | `ShortestTime -> make_terrain_inner len empty_terrain 10.0
 
   let cpv_of_polar (r, theta) =
     let x = r *. cos(theta) in
