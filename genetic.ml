@@ -80,9 +80,6 @@ end
 
 module RealGenetic : GeneticCarAlgo = struct
   let pi = 3.14159265359
-  let min_r = 50.0
-  let r_range = 50.0
-  (* let gen_size = 20 *)
 
   (* remember entire module only responsible for generating a new population,
    * based on scoring metric. also determines similarity rating as a
@@ -187,7 +184,7 @@ module RealGenetic : GeneticCarAlgo = struct
     let prevchassis = car.chassis in
     let prevwheels = car.wheels in
     let newchassis = List.rev (mutate_chassis prevchassis p_chassis [] 0.) in
-    let newchassis = List.sort (fun x y -> compare (snd x) (snd y)) newchassis in 
+    let newchassis = List.sort (fun x y -> compare (snd x) (snd y)) newchassis in
     let newwheels = mutate_wheels prevwheels p_wheels in
     {chassis = newchassis; wheels = newwheels}
 
@@ -326,10 +323,10 @@ module RealGenetic : GeneticCarAlgo = struct
       (* according to world_parameters, mutate and perturb the genes of
        * the children *)
       let mutated_children = mutate_children new_children world_parameters [] in
-      (* now simply return the new generation of cars in a population variant *)
-      let a::b::_ = sorted_cars in 
-      let add_elite_clone = a::b::(mutated_children |> List.tl |> List.tl) in
-      Population add_elite_clone
+      (* adding two elite clones *)
+      let a::b::_ = sorted_cars in
+      let add_elite_clones = a::b::(mutated_children |> List.tl |> List.tl) in
+      Population add_elite_clones
 
   (* computes euclidean distance between the lists of points
    * precondition: lists are of same length *)
