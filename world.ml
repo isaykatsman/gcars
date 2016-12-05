@@ -1,6 +1,7 @@
 open Chipmunk
 open OO
 open Low_level
+open Genetic
 (*
 open Vect
 open Genetic
@@ -51,13 +52,12 @@ module RealWorld = struct
 
   let cpv_of_vect v = cpv (Vect.x v) (Vect.y v)
 
-  let make_terrain len (space : cp_space) =
+  let make_terrain len (space : cp_space) eval_func =
     let empty_terrain = {
       points = [Vect.make 0.0 0.0];
       body = new cp_body infinity infinity;
     } in
-
-    let rec make_terrain_inner n terr =
+    let rec make_terrain_inner n terr smoothness=
       if n = 0 then 
         terr
       else
@@ -68,7 +68,7 @@ module RealWorld = struct
           else if (len - n) < 30 then
             0.0
           else
-            (Random.float pi /. 1.5) -. (pi /. 3.0) in
+            (Random.float pi /. smoothness) -. (pi /. (smoothness*.2.0)) in
 
         let v = Vect.rot (Vect.make 50.0 0.0) angle in
         let new_v = Vect.add v prev_v in
@@ -83,9 +83,12 @@ module RealWorld = struct
         shape#set_elasticity 0.0;
         space#add_static_shape shape;
         let new_terr = { terr with points = new_points} in
-        make_terrain_inner (n - 1) new_terr 
-    in 
-    make_terrain_inner len empty_terrain
+        make_terrain_inner (n - 1) new_terr smoothness
+    in
+    (* make_terrain_inner len empty_terrain 1.5  *)
+    match eval_func with
+    | `LongestDistance -> make_terrain_inner len empty_terrain 1.5
+    | `ShortestTime -> make_terrain_inner len empty_terrain 100.0
 
   let cpv_of_polar (r, theta) =
     let x = r *. cos(theta) in
@@ -192,11 +195,11 @@ module RealWorld = struct
     | Empty n -> failwith "make_cars with Empty not implemented"
   ;;
 
-  let make pop =
+  let make pop eval_func =
     let space = new cp_space in
     init_chipmunk ();
     space#set_gravity (cpv 0.0 (-980.0)); 
-    let terr = make_terrain 1000 space in
+    let terr = make_terrain 1000 space eval_func in
     let cars = make_cars space pop in
     { cars = cars; space = space; terrain = terr }
 
@@ -223,7 +226,7 @@ module RealWorld = struct
     {wheel1 = wheel1; wheel2 = wheel2; chassis = chassis}::step_cars xs'
 
   let step world = 
-    let substeps = 100 in
+    let substeps = 10 in
     let dt = (1.0 /. 60.0) /. (float substeps) in
     for i=0 to pred substeps do
       let cars = step_cars world.cars in

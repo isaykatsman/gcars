@@ -19,10 +19,10 @@ open Simulation
 *)
 
 exception Invalid_evaluation_function
-let parse_opts : sim_options =
+(* let parse_opts : sim_options =
   let mutation_rate = ref 0.05 in
   let num_cars = ref 10 in
-  let eval_func = ref LongestDistance in
+  let eval_func = ref `LongestDistance in
   let parse_eval_f s =
     match s with
     | "ld" -> LongestDistance
@@ -40,15 +40,22 @@ let parse_opts : sim_options =
   ] in
   let usage_msg = "OCaml Genetic Cars" in
   Arg.parse speclist print_endline usage_msg;
-  { mutation_rate = !mutation_rate; num_cars = !num_cars; eval_func = !eval_func }
+  { mutation_rate = !mutation_rate; num_cars = !num_cars; eval_func = !eval_func } *)
 
 let parse_stdin_opts = 
+  let config = ref {mutation_rate = 0.05; num_cars = 10; eval_func = `LongestDistance} in
   print_endline "Please enter the mutation rate (or enter for default)";
   let line = input_line stdin in 
-  if line = "" then 
-  {mutation_rate = 0.05; num_cars = 10; eval_func = LongestDistance}
-  else
-    {mutation_rate = float_of_string line; num_cars = 10; eval_func = LongestDistance}
+  if line <> "" then config := {!config with mutation_rate = (float_of_string line)};
+  print_endline "Please enter optimization type (or enter for standard)";
+  print_endline "1 for standard, 2 for speed";
+  let line = input_line stdin in 
+  (if line <> "" then 
+  let v = (int_of_string line) in 
+  if v=1 then config := {!config with eval_func = `LongestDistance} 
+  else if v=2 then config := {!config with eval_func = `ShortestTime});
+  !config
+     
     
 let main () =
   Random.self_init();

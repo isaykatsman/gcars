@@ -10,14 +10,10 @@ open Glut
 *)
 open Printf
 
-type eval_function =
-  | LongestDistance
-  | ShortestTime
-
 type sim_options = {
   mutation_rate : float;
   num_cars : int;
-  eval_func : eval_function;
+  eval_func : [`LongestDistance | `ShortestTime];
 }
 
 module type Simulation = sig
@@ -64,7 +60,7 @@ module Simulation = struct
 
   let make opts = 
     let pop = Genetic.new_population (Empty opts.num_cars) [] opts.mutation_rate in 
-    let world = World.make pop in
+    let world = World.make pop (opts.eval_func) in
     let course_end = terr_max_x (World.get_terrain world) in
     { pop = pop; world = world; 
       graphics = Graphics.make pop;
@@ -75,13 +71,10 @@ module Simulation = struct
 
   (* 1 second of non-progress will kill a car *) 
   let max_timer = 63 * 5
+  let sim_time = ref 1
 
   let update_progress sim progress = 
     let states = World.get_car_state sim.world in
-    (* print_endline ("=== Len of states list "^(string_of_int (List.length *)
-    (* states)^" ===")); *)
-    (* print_endline ("=== Len of progress list "^(string_of_int (List.length *)
-    (* progress)^" ===")); *)
       let rec update_prog_inner sim states progress acc = 
         match (progress, states) with
         | ([], []) -> acc
@@ -110,8 +103,12 @@ module Simulation = struct
                dead = new_dead } in
             update_prog_inner sim states progresses (acc@[new_progress]) 
         | (_, _) -> failwith "Simulation.generation_done: Car state and \
-                              progress lists are not the same length" in
-    update_prog_inner sim states progress []
+                              progress lists are not the same length" 
+    in
+    match sim.opts.eval_func with
+    | `LongestDistance -> update_prog_inner sim states progress []
+    | `ShortestTime -> print_int (!sim_time);if !sim_time mod 500 = 0 then (sim_time := 1; List.map (fun x -> {x with dead = true}) progress) else (sim_time := !sim_time + 1; progress)
+
  
   (* This function will check if the evaluation of a generation is done (all
    * cars not making progress *)
@@ -129,8 +126,8 @@ module Simulation = struct
   (* Score the generation *)
   let score_gen sim eval_f =
     match eval_f with
-    | ShortestTime -> []
-    | LongestDistance -> (*List.map score_max_dist (World.get_car_state sim.world)*)
+    | `ShortestTime -> List.map (fun x -> Vect.x (x.pos)) (World.get_car_state sim.world)
+    | `LongestDistance -> 
       List.map (fun x -> x.greatest_x) sim.progress
 
   let max lst = List.fold_left max 0.0 lst
