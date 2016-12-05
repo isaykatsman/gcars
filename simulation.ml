@@ -26,7 +26,7 @@ module type Simulation = sig
   val run : t -> unit
 end
 
-module FakeSimulation = struct
+module Simulation = struct
   type car_progress = {
     greatest_x : float; (* The greatest x position the car has attained so far *)
     life : float; (* The number of steps since the greastest x increased *)
@@ -130,7 +130,8 @@ module FakeSimulation = struct
   let score_gen sim eval_f =
     match eval_f with
     | ShortestTime -> []
-    | LongestDistance -> List.map score_max_dist (World.get_car_state sim.world)
+    | LongestDistance -> (*List.map score_max_dist (World.get_car_state sim.world)*)
+      List.map (fun x -> x.greatest_x) sim.progress
 
   let max lst = List.fold_left max 0.0 lst
 
@@ -171,5 +172,3 @@ module FakeSimulation = struct
     glutMainLoop ();
   ;;
 end
-
-module Simulation = FakeSimulation

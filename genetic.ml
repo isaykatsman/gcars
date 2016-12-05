@@ -187,7 +187,7 @@ module RealGenetic : GeneticCarAlgo = struct
     let prevchassis = car.chassis in
     let prevwheels = car.wheels in
     let newchassis = List.rev (mutate_chassis prevchassis p_chassis [] 0.) in
-    let newchassis = List.sort (fun x y -> int_of_float ((snd y)-.(snd x))) newchassis in 
+    let newchassis = List.sort (fun x y -> compare (snd x) (snd y)) newchassis in 
     let newwheels = mutate_wheels prevwheels p_wheels in
     {chassis = newchassis; wheels = newwheels}
 
@@ -271,9 +271,7 @@ module RealGenetic : GeneticCarAlgo = struct
     if rand = 0. then
       0
     else
-      (* healthy parents assumed to be 0-4, 5 means 62.3% of the
-       * random distribution is covered by the 0-4 values *)
-      (int_of_float (floor(-.1. *. log(rand) *. 10.))) mod gen_size
+      (int_of_float (floor(-.1. *. log(rand) *. 3.))) mod gen_size
 
   (* picks two different random numbers according to log distribution
    * for parents - emphasizes earlier, higher-scoring parents *)
@@ -329,7 +327,9 @@ module RealGenetic : GeneticCarAlgo = struct
        * the children *)
       let mutated_children = mutate_children new_children world_parameters [] in
       (* now simply return the new generation of cars in a population variant *)
-      Population mutated_children
+      let a::b::_ = sorted_cars in 
+      let add_elite_clone = a::b::(mutated_children |> List.tl |> List.tl) in
+      Population add_elite_clone
 
   (* computes euclidean distance between the lists of points
    * precondition: lists are of same length *)

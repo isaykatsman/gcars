@@ -59,7 +59,7 @@ module RealWorld = struct
         terr
       else
         let prev_v::t = terr.points in
-        let angle = (Random.float pi /. 2.0) -. (pi /. 4.0) in
+        let angle = (Random.float pi /. 1.5) -. (pi /. 3.0) in
         let v = Vect.rot (Vect.make 50.0 0.0) angle in
         let new_v = Vect.add v prev_v in
         let new_points = new_v::prev_v::t in
@@ -95,15 +95,15 @@ module RealWorld = struct
             int_of_float (b.cp_y *. a.cp_x -. a.cp_y *. b.cp_x)
           in
           let add_chassis_triangle verts : unit =
-            print_string "[|";
+         (*    print_string "[|";
             Array.iter (fun x -> print_string ("("^(string_of_float x.cp_x)^", \
             "^(string_of_float x.cp_y)^"); "))
                        verts;
             print_string "|]";
-            print_newline ();
+            print_newline (); *)
             Array.sort sort verts;
             let shape = new cp_shape body (POLY_SHAPE(verts, cpv_zero)) in
-            shape#set_friction 0.5;
+            shape#set_friction 2.0;
             shape#set_elasticity 0.0;
             shape#set_layers (mask_offset 1 i);
             space#add_shape shape;
@@ -180,7 +180,7 @@ module RealWorld = struct
     let space = new cp_space in
     init_chipmunk ();
     space#set_gravity (cpv 0.0 (-980.0)); 
-    let terr = make_terrain 500 space in
+    let terr = make_terrain 1000 space in
     let cars = make_cars space pop in
     { cars = cars; space = space; terrain = terr }
 
