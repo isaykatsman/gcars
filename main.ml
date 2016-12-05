@@ -43,17 +43,30 @@ exception Invalid_evaluation_function
   { mutation_rate = !mutation_rate; num_cars = !num_cars; eval_func = !eval_func } *)
 
 let parse_stdin_opts =
-  let config = ref {mutation_rate = 0.10; num_cars = 10; car_vel = 10.0;eval_func = `LongestDistance; scale = 1.0} in
-  print_endline "Please enter the mutation rate (or enter for default)";
-  print_endline "expected 0.0 - 1.0";
-  let line = input_line stdin in
+  let config = ref {mutation_rate = 0.05; num_cars = 10; eval_func = `LongestDistance; car_vel = 10.0; scale = 1.0} in
+  print_endline 
+"**********************
+* OCaml Genetic Cars *
+**********************";
+
+  print_endline "Enter the mutation rate (or Enter for default, 0.05)
+The mutation rate should be in the range (0.0, 1.0) exclusive";
+  print_string "> ";
+  flush stdout;
+
+  let line = input_line stdin in 
   if line <> "" then config := {!config with mutation_rate = (float_of_string line)};
-  print_endline "Please enter optimization type (or enter for standard)";
-  print_endline "1 for standard, 2 for speed, 3 for jump";
-  let line = input_line stdin in
-  (if line <> "" then
-  let v = (int_of_string line) in
-  if v=1 then config := {!config with eval_func = `LongestDistance}
+
+  print_endline "Enter evaluation function (or Enter for default, 1)
+1 Longest Distance (Terrain will be rugged)
+2 Shortest Time (Terrain will be relatively flat)";
+  print_string "> ";
+  flush stdout;
+
+  let line = input_line stdin in 
+  (if line <> "" then 
+  let v = (int_of_string line) in 
+  if v=1 then config := {!config with eval_func = `LongestDistance} 
   else if v=2 then config := {!config with eval_func = `ShortestTime}
   else if v=3 then config := {!config with eval_func = `JumpDistance});
   print_endline "Please enter speed of car (or enter for standard 10.0)";
