@@ -44,6 +44,10 @@ exception Invalid_evaluation_function
 
 let parse_stdin_opts =
   let config = ref {mutation_rate = 0.05; num_cars = 10; eval_func = `LongestDistance} in
+  print_endline 
+"**********************
+* OCaml Genetic Cars *
+**********************";
 
   print_endline "Enter the mutation rate (or Enter for default, 0.05)
 The mutation rate should be in the range (0.0, 1.0) exclusive";
