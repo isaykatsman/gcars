@@ -93,21 +93,12 @@ module FakeSimulation = struct
                 (progress.greatest_x, 0.0, true)
               else if curr_x > sim.course_end then
                 let () = print_endline "Car finished course" in
-<<<<<<< HEAD
                 (progress.greatest_x, 0.0, true)
               else if curr_x > progress.greatest_x then
-                let () = print_endline "Car is making progress" in
-                (curr_x, min 50.0 (progress.life +. (curr_x -. progress.greatest_x)), false)
-=======
-                (progress.greatest_x, 0, true)
-              else if (curr_x > progress.greatest_x) && (abs_float (curr_x -.
-              progress.greatest_x)) > 2.0  then
-                let () = print_endline ("Car is making progress, greatest: \
-                  "^(string_of_float progress.greatest_x)^", curr: \
-                    "^(string_of_float curr_x)^", y: \
-                      "^(string_of_float (Vect.y state.pos))) in
-                (curr_x, 0, false)
->>>>>>> c0ae98894861d1f6e4f9a278ca812b80fb8fa288
+                let () =  print_endline ("Life: "^(string_of_float progress.life)^", \
+                Dead: false") in
+                let dead = progress.life < 0.0 in 
+                (curr_x, min 50.0 (progress.life +. (curr_x -. progress.greatest_x) -. 0.2), dead)
               else
                 let new_life = progress.life -. 0.2 in
                 let dead = new_life < 0.0 in

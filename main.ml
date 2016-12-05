@@ -42,10 +42,18 @@ let parse_opts : sim_options =
   Arg.parse speclist print_endline usage_msg;
   { mutation_rate = !mutation_rate; num_cars = !num_cars; eval_func = !eval_func }
 
+let parse_stdin_opts = 
+  print_endline "Please enter the mutation rate (or enter for default)";
+  let line = input_line stdin in 
+  if line = "" then 
+  {mutation_rate = 0.05; num_cars = 10; eval_func = LongestDistance}
+  else
+    {mutation_rate = float_of_string line; num_cars = 10; eval_func = LongestDistance}
+    
 let main () =
-  let opts = parse_opts in
+  Random.self_init();
+  let opts = parse_stdin_opts in
   let sim = Simulation.make opts in
-  (* Random.self_init(); *)
   Simulation.run sim
 
 let () = main ()

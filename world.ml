@@ -50,7 +50,7 @@ module RealWorld = struct
 
   let make_terrain len (space : cp_space) =
     let empty_terrain = {
-      points = [Vect.make ~-.1000.0 0.0];
+      points = [Vect.make ~-.10000.0 0.0];
       body = new cp_body infinity infinity;
     } in
 
