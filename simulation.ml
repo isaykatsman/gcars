@@ -29,7 +29,7 @@ end
 module FakeSimulation = struct
   type car_progress = {
     greatest_x : float; (* The greatest x position the car has attained so far *)
-    life : float; (* The number of steps since the greastest x increased *)
+    timer : int; (* The number of steps since the greastest x increased *)
     dead : bool; (* Whether the car is dead *)
   }
 
@@ -46,7 +46,7 @@ module FakeSimulation = struct
   let init_progress num_cars =
     let rec init_progress_inner num_cars acc =
       if num_cars > 0 then
-        let new_acc = {greatest_x = 0.0; life = 50.0; dead = false}::acc in
+        let new_acc = {greatest_x = 0.0; timer = 0; dead = false}::acc in
         init_progress_inner (num_cars - 1) new_acc
       else
         acc in
@@ -86,19 +86,13 @@ module FakeSimulation = struct
         match (progress, states) with
         | ([], []) -> acc
         | (progress::progresses, state::states) ->
-            let (new_greatest_x, new_life, new_dead) = 
+            let (new_greatest_x, new_timer, new_dead) = 
               let curr_x = Vect.x state.pos in
               if progress.dead then 
                 let () = print_endline "Car is dead" in
-                (progress.greatest_x, 0.0, true)
+                (progress.greatest_x, progress.timer, true)
               else if curr_x > sim.course_end then
                 let () = print_endline "Car finished course" in
-<<<<<<< HEAD
-                (progress.greatest_x, 0.0, true)
-              else if curr_x > progress.greatest_x then
-                let () = print_endline "Car is making progress" in
-                (curr_x, min 50.0 (progress.life +. (curr_x -. progress.greatest_x)), false)
-=======
                 (progress.greatest_x, 0, true)
               else if (curr_x > progress.greatest_x) && (abs_float (curr_x -.
               progress.greatest_x)) > 2.0  then
@@ -107,15 +101,14 @@ module FakeSimulation = struct
                     "^(string_of_float curr_x)^", y: \
                       "^(string_of_float (Vect.y state.pos))) in
                 (curr_x, 0, false)
->>>>>>> c0ae98894861d1f6e4f9a278ca812b80fb8fa288
               else
-                let new_life = progress.life -. 0.2 in
-                let dead = new_life < 0.0 in
-                print_endline ("Life: "^(string_of_float new_life)^", \
+                let new_timer = progress.timer + 1 in
+                let dead = new_timer > max_timer in
+                print_endline ("New timer: "^(string_of_int new_timer)^", \
                 Dead: "^(string_of_bool dead));
-                (progress.greatest_x, new_life, dead) in
+                (progress.greatest_x, new_timer, dead) in
             let new_progress = 
-              {greatest_x = new_greatest_x; life = new_life;
+              {greatest_x = new_greatest_x; timer = new_timer;
                dead = new_dead } in
             update_prog_inner sim states progresses (acc@[new_progress]) 
         | (_, _) -> failwith "Simulation.generation_done: Car state and \
