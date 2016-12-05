@@ -53,7 +53,7 @@ module RealWorld = struct
 
   let make_terrain len (space : cp_space) =
     let empty_terrain = {
-      points = [Vect.make ~-.10000.0 0.0];
+      points = [Vect.make 0.0 0.0];
       body = new cp_body infinity infinity;
     } in
 
@@ -62,7 +62,14 @@ module RealWorld = struct
         terr
       else
         let prev_v::t = terr.points in
-        let angle = (Random.float pi /. 1.5) -. (pi /. 3.0) in
+        let angle = 
+          if (len - n) < 10 then
+            (-. (pi /. 2.0))
+          else if (len - n) < 30 then
+            0.0
+          else
+            (Random.float pi /. 1.5) -. (pi /. 3.0) in
+
         let v = Vect.rot (Vect.make 50.0 0.0) angle in
         let new_v = Vect.add v prev_v in
         let new_points = new_v::prev_v::t in
@@ -141,7 +148,7 @@ module RealWorld = struct
             chassis_triangles lst
           in
 
-          body#set_pos (cpv 100.0 300.0);
+          body#set_pos (cpv 300.0 0.0);
           space#add_body body;
           get_chassis_shape car.chassis;
           (* TODO: Add wheels *)
