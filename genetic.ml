@@ -246,7 +246,7 @@ module RealGenetic : GeneticCarAlgo = struct
   (* sort from highest to lowest score, so that
    * list is sorted from healthiest to leaset healthy parents *)
   let sort_cars pop scores =
-    let car_list = match pop with Empty _ -> [] | Population pop -> pop in
+    let car_list = match pop with Empty _ -> [] | Population popul -> popul in
     (* when mergin we assume that p and s have the same length *)
     let rec merge_list p s accum =
       match p with
@@ -261,7 +261,7 @@ module RealGenetic : GeneticCarAlgo = struct
       | [] -> accum
       | (s,car)::t -> unmerge_list t (car::accum)
     in
-    let cars_sorted_by_score = unmerge_list sorted_list [] in
+    let cars_sorted_by_score = List.rev (unmerge_list sorted_list []) in
     cars_sorted_by_score
 
   (* negative log distribution for parent selection *)
@@ -288,7 +288,6 @@ module RealGenetic : GeneticCarAlgo = struct
    * each time *)
   let rec generate_children gen_size parent_list decr_gen_size accum =
     if decr_gen_size > 0 then
-      (* 63.2% of parent distribution skewed toward first 5 *)
       let (p1, p2) = generate_parents gen_size 5 0 0 in
       let parent1 = List.nth parent_list p1 in
       let parent2 = List.nth parent_list p2 in
