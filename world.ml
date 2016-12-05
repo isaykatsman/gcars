@@ -17,7 +17,7 @@ type car_state = {
 module type World = sig
   type t
   val make : population -> t
-  val with_terrain : (Vect.t list) -> population -> t
+  val with_terrain : t -> population -> t
   val step : t -> t
   val get_car_state : t -> car_state list
   val get_terrain : t -> Vect.t list
@@ -245,10 +245,30 @@ module RealWorld = struct
     in
     List.rev (get_cars t.cars)
 
-  (* TODO: Dummy implementation *)
-  let with_terrain terr pop = 
-    let new_pop = make pop in 
-    {new_pop with terrain = {new_pop.terrain with points = terr}}
+  let gen_shape_from_points (space : cp_space) pts =
+    let body = new cp_body infinity infinity in
+    let rec gen_shapes = function
+    | [] -> ()
+    | x::[] -> ()
+    | x::y::xs' -> 
+      let shape = new cp_shape body (SEGMENT_SHAPE(cpv_of_vect x, cpv_of_vect y, 0.0)) in
+      shape#set_friction 1.0;
+      shape#set_elasticity 0.0;
+      space#add_static_shape shape;
+      gen_shapes (y::xs')
+    in
+    gen_shapes pts
+
+  let with_terrain world pop = 
+    let space = new cp_space in
+    init_chipmunk ();
+    space#set_gravity (cpv 0.0 (-980.0));
+    gen_shape_from_points space world.terrain.points; 
+    let cars = make_cars space pop in
+    { cars = cars; space = space; terrain = world.terrain}
+
+
+    
 end
 module World = RealWorld
 

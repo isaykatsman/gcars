@@ -52,7 +52,7 @@ module FakeSimulation = struct
    * cars not making progress *)
   let generation_done sim = 
     counter := !counter + 1;
-    if (!counter mod 900) = 0 then
+    if (!counter mod 200) = 0 then
       true
     else
       false
@@ -78,8 +78,7 @@ module FakeSimulation = struct
         let new_pop = Genetic.new_population sim.pop scores
           sim.opts.mutation_rate in
         let new_graphics = Graphics.make new_pop in
-        let terr = World.get_terrain sim.world in
-        let new_world = World.with_terrain terr new_pop in
+        let new_world = World.with_terrain sim.world new_pop in
         { sim with pop = new_pop; graphics = new_graphics; world = new_world;
           prev_max_scores = new_prev_scores }
       else
