@@ -95,7 +95,7 @@ module FakeSimulation = struct
                 let () = print_endline "Car finished course" in
                 (progress.greatest_x, 0, true)
               else if (curr_x > progress.greatest_x) && (abs_float (curr_x -.
-              progress.greatest_x)) > 1.0  then
+              progress.greatest_x)) > 2.0  then
                 let () = print_endline ("Car is making progress, greatest: \
                   "^(string_of_float progress.greatest_x)^", curr: \
                     "^(string_of_float curr_x)^", y: \
