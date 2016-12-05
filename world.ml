@@ -119,7 +119,7 @@ module RealWorld = struct
           let add_chassis_triangle verts : unit =
             Array.sort sort verts;
             let shape = new cp_shape body (POLY_SHAPE(verts, cpv_zero)) in
-            shape#set_friction 2.0;
+            shape#set_friction 7.0;
             shape#set_elasticity 0.0;
             shape#set_layers (mask_offset 1 i);
             space#add_shape shape;
