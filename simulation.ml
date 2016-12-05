@@ -52,7 +52,7 @@ module FakeSimulation = struct
    * cars not making progress *)
   let generation_done sim = 
     counter := !counter + 1;
-    if (!counter mod 300) = 0 then
+    if (!counter mod 900) = 0 then
       true
     else
       false

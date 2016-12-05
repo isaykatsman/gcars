@@ -31,6 +31,9 @@ let int_from_mask x =
   in
   f x 1
 
+let mask_offset v car_n = 
+  int_of_float ((float_of_int v)*.2.0**(float_of_int (car_n*3)))
+
 module RealWorld = struct
   let cpv_zero = cpvzero ()
 
@@ -76,7 +79,7 @@ module RealWorld = struct
         
         (* Attach the shape to the body and put it in the space *)
         let shape = new cp_shape terr.body (SEGMENT_SHAPE(cp_prev_v, cp_new_v, 0.0)) in
-        shape#set_layers (int_from_mask 11);
+        (* shape#set_layers (int_from_mask 111); *)
         shape#set_friction 1.0;
         shape#set_elasticity 0.0;
         space#add_static_shape shape;
@@ -95,38 +98,32 @@ module RealWorld = struct
   let make_cars (space : cp_space) pop = 
     match pop with
     | Population lst ->
-        if (List.length lst) > 1 then
-          failwith "More than 1 car not implemented"
-        else
-          let car = List.hd lst in
+        let car_list = ref [] in 
+        for i = 0 to (List.length lst)-1 do 
+          let car = List.nth lst i in
           (* TODO: Cacluate moment of interia and mass for body *)
-          let body = new cp_body 5.0 1000.0 in 
-
+          let body = new cp_body 10.0 100.0 in 
+          let sort a b = 
+            int_of_float (b.cp_y *. a.cp_x -. a.cp_y *. b.cp_x)
+          in
           let add_chassis_triangle verts : unit =
-            let shape_verts = [|
-              cpv (-50.) (-50.);
-              cpv (-50.) ( 50.);
-              cpv ( 50.) ( 50.);
-              cpv ( 50.) (-50.);
-            |] in
             print_string "[|";
             Array.iter (fun x -> print_string ("("^(string_of_float x.cp_x)^", \
             "^(string_of_float x.cp_y)^"); "))
                        verts;
             print_string "|]";
             print_newline ();
+            Array.sort sort verts;
             let shape = new cp_shape body (POLY_SHAPE(verts, cpv_zero)) in
             shape#set_friction 0.5;
             shape#set_elasticity 0.0;
-            shape#set_layers (int_from_mask 01);
+            shape#set_layers (mask_offset 1 i);
             space#add_shape shape;
           in
           let rec get_chassis_shape lst = 
             let first_vert = List.hd lst in
             let rec chassis_triangles lst =
-              let sort a b = 
-                int_of_float (b.cp_y *. a.cp_x -. a.cp_y *. b.cp_x)
-              in
+              
               print_string "first: "; print_float (fst first_vert); 
               match lst with
               | [] -> ()
@@ -149,7 +146,7 @@ module RealWorld = struct
             chassis_triangles lst
           in
 
-          body#set_pos (cpv 600.0 500.0);
+          body#set_pos (cpv 100.0 ((float_of_int i) *. 100.0 +. 200.0));
           space#add_body body;
           get_chassis_shape car.chassis;
           (* TODO: Add wheels *)
@@ -163,22 +160,33 @@ module RealWorld = struct
           space#add_body wheel2; 
 
           let j1 = new cp_joint body wheel1 (PIN_JOINT(cpvzero(), cpvzero()))
-          and j2 = new cp_joint body wheel2 (PIN_JOINT(cpvzero(), cpvzero())) in
+          and j2 = new cp_joint body wheel2 (PIN_JOINT(cpvzero(), cpvzero())) 
+          and j3 = new cp_joint body wheel1 (PIN_JOINT(cpv 100.0 0.0, cpvzero())) 
+          and j4 = new cp_joint body wheel2 (PIN_JOINT(cpv 100.0 0.0, cpvzero())) 
+          and j5 = new cp_joint body wheel1 (PIN_JOINT(cpv 0.0 100.0, cpvzero())) 
+          and j6 = new cp_joint body wheel2 (PIN_JOINT(cpv 0.0 100.0, cpvzero()))
+          and j7 = new cp_joint wheel1 wheel2 (PIN_JOINT(cpvzero(), cpvzero())) in 
           space#add_constraint (j1#get_constraint);
           space#add_constraint (j2#get_constraint);
+          space#add_constraint (j3#get_constraint);
+          space#add_constraint (j4#get_constraint);
+          space#add_constraint (j5#get_constraint);
+          space#add_constraint (j6#get_constraint);
+          space#add_constraint (j7#get_constraint);
 
           let wheelshape1 = new cp_shape wheel1 (CIRCLE_SHAPE(whinfo1.radius, cpvzero()))
           and wheelshape2 = new cp_shape wheel2 (CIRCLE_SHAPE(whinfo2.radius, cpvzero())) in 
-          wheelshape1#set_friction 5.0;
-          wheelshape2#set_friction 5.0;
-          wheelshape1#set_layers (int_from_mask 10);
-          wheelshape2#set_layers (int_from_mask 10);
+          wheelshape1#set_friction 1.0;
+          wheelshape2#set_friction 1.0;
+          wheelshape1#set_layers (mask_offset 2 i);
+          wheelshape2#set_layers (mask_offset 4 i);
+          print_int (wheelshape1#get_layers); print_endline " wheel layer";
           (* wheelshape1#set_elasticity 0.0; *)
           space#add_shape wheelshape1; 
           space#add_shape wheelshape2;
-
-          
-          [{ chassis = body; wheel1 = wheel1; wheel2 = wheel2 }]
+          car_list := { chassis = body; wheel1 = wheel1; wheel2 = wheel2 }::(!car_list)
+        done;
+        !car_list
     | Empty n -> failwith "make_cars with Empty not implemented"
   ;;
 
@@ -200,24 +208,26 @@ module RealWorld = struct
     wheel1#reset_forces;
     wheel2#reset_forces;
     let max_w = -100.0 in
-    let torque = 60000.0 *. (min 1.0 ((wheel1#get_a_vel -. 0.1 *. max_w) /. max_w)) in 
+    let torque = 60000.0 *. (min 1.0 ((wheel1#get_a_vel -. 1.0 *. max_w) /. max_w)) in 
+    (* print_float torque; print_endline (" intended torque"); *)
     (* wheel1#set_torque (wheel1#get_torque +. torque); *)
     (* wheel2#set_torque (wheel1#get_torque); *)
+    (* print_float (wheel1#get_torque); print_endline (" torque "); *)
     (* chassis#set_torque (chassis#get_torque -. torque); *)
-    wheel1#set_a_vel (~-.100.0);
-    wheel2#set_a_vel (~-.100.0);
+    wheel1#set_a_vel (~-.50.0);
+    wheel2#set_a_vel (~-.50.0);
     (* chassis#set_a_vel (~-. 10.0); *)
     (* chassis#set_force (cpv 50.0 (0.0)); *)
     {wheel1 = wheel1; wheel2 = wheel2; chassis = chassis}::step_cars xs'
 
   let step world = 
-    let substeps = 3 in
+    let substeps = 10 in
     let dt = (1.0 /. 60.0) /. (float substeps) in
     for i=0 to pred substeps do
       let cars = step_cars world.cars in
       
-      print_float ((List.nth cars 0).wheel1#get_pos).cp_y; print_string " ";
-      print_float ((List.nth cars 0).chassis#get_pos).cp_y; print_newline ();
+ (*      print_float ((List.nth cars 0).wheel1#get_a_vel); print_string " ";
+      print_float ((List.nth cars 0).chassis#get_pos).cp_y; print_newline (); *)
       
       (* print_float (((List.nth cars 0).wheel1#get_pos).cp_y -. ((List.nth cars 0).chassis#get_pos).cp_y); print_newline (); *)
       let space = world.space in 
@@ -230,82 +240,24 @@ module RealWorld = struct
   let vect_of_cpv v = Vect.make v.cp_x v.cp_y 
 
   let get_car_state t = 
-    match t.cars with
-    | [c] -> 
-        let angle = c.chassis#get_angle in
-        let pos = vect_of_cpv (c.chassis#get_pos) in
-        let wheel_angles = (c.wheel1#get_angle, c.wheel2#get_angle) in
-        (* TODO: Hardcoded velocity to 0 *)
-        let wheel_positions = [vect_of_cpv c.wheel1#get_pos; 
-                               vect_of_cpv c.wheel2#get_pos] in
-        let velocity = 0.0 in
-        [{velocity = velocity; pos = pos; angle = angle; wheel_angles =
-          wheel_angles; wheel_positions = wheel_positions }]
-    | _ -> failwith "get_car_state with more than 1 car not implemented"
+    let rec get_cars lst = 
+      match lst with
+      | c::cs' -> 
+          let angle = c.chassis#get_angle in
+          let pos = vect_of_cpv (c.chassis#get_pos) in
+          let wheel_angles = (c.wheel1#get_angle, c.wheel2#get_angle) in
+          (* TODO: Hardcoded velocity to 0 *)
+          let wheel_positions = [vect_of_cpv c.wheel1#get_pos; 
+                                 vect_of_cpv c.wheel2#get_pos] in
+          let velocity = 0.0 in
+          {velocity = velocity; pos = pos; angle = angle; wheel_angles =
+            wheel_angles; wheel_positions = wheel_positions }::(get_cars cs')
+      | [] -> []
+    in
+    List.rev (get_cars t.cars)
 
   (* TODO: Dummy implementation *)
   let with_terrain terr pop = make pop
 end
-
-module FakeWorld = struct
-  type t = { cars : car_state list; terrain : Vect.t list }
-
-  let pi = 3.14159265359
-  
-  let rec make_terrain n acc =
-    if n = 0 then acc
-    else
-    match acc with
-    | [] -> make_terrain n [Vect.origin]
-    | prev_v::t -> 
-        let angle = (Random.float pi /. 2.0) -. (pi /. 4.0) in
-        let v = Vect.rot (Vect.make 50.0 0.0) angle in
-        let v_new = Vect.add v prev_v in
-        let v1_str = Vect.to_string prev_v in
-        let v2_str = Vect.to_string v_new in
-        make_terrain (n - 1) (v_new::prev_v::t)
-
-  let rec make_states n acc =
-    if n = 0 then acc 
-    else 
-      let car = { 
-        velocity = Random.float 10.0; 
-        pos = Vect.make 0.0 0.0; 
-        angle = 0.0;
-        wheel_angles = (1.0, 2.0);
-        wheel_positions = [];
-      } in
-      make_states (n-1) (car::acc)
-
-  let with_terrain terr pop = 
-    let size = 
-      match pop with
-      | Empty n -> n
-      | Population lst -> List.length lst in
-    let car_states = make_states size [] in
-    { cars = car_states; terrain = terr }
-
-  let make pop =
-    let terr = make_terrain 100 [] in
-    with_terrain terr pop
-
-  let get_terrain t = t.terrain
-  let get_car_state t = t.cars
-
-  let step_car car_state =
-    let vel = car_state.velocity in
-    let dx = Vect.make vel 0.0 in
-    let new_pos = Vect.add car_state.pos dx in
-    let new_wheel_angles = 
-      match car_state.wheel_angles with
-      | (a1, a2) -> (a1 +. 0.5, a2 +. 0.5) in
-    { car_state with pos = new_pos; angle = (car_state.angle +. 0.05);
-      wheel_angles = new_wheel_angles }
-
-  let step world = 
-    let new_states = List.map step_car world.cars in
-    { world with cars = new_states }
-end
-
 module World = RealWorld
 
