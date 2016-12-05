@@ -23,14 +23,6 @@ module type World = sig
   val get_terrain : t -> Vect.t list
 end
 
-let int_from_mask x =
-  let rec f x exp = 
-    match x with
-    | 0 -> 0
-    | x -> (f (x/10) exp*2) +(if x mod 2 == 1 then exp else 0)
-  in
-  f x 1
-
 let mask_offset v car_n = 
   int_of_float ((float_of_int v)*.2.0**(float_of_int (car_n*3)))
 
@@ -79,7 +71,6 @@ module RealWorld = struct
         
         (* Attach the shape to the body and put it in the space *)
         let shape = new cp_shape terr.body (SEGMENT_SHAPE(cp_prev_v, cp_new_v, 0.0)) in
-        (* shape#set_layers (int_from_mask 111); *)
         shape#set_friction 1.0;
         shape#set_elasticity 0.0;
         space#add_static_shape shape;
@@ -152,8 +143,8 @@ module RealWorld = struct
           (* TODO: Add wheels *)
           (*List.iter (add_wheel car body space) car.wheels; *)
           let (whinfo1, whinfo2) = car.wheels in 
-          let wheel1 = new cp_body 10.0 10.0 in
-          let wheel2 = new cp_body 10.0 10.0 in 
+          let wheel1 = new cp_body 1.0 100.0 in
+          let wheel2 = new cp_body 1.0 100.0 in 
           wheel1#set_pos (cpvadd body#get_pos (cpv_of_polar ((List.nth car.chassis whinfo1.vert))));
           wheel2#set_pos (cpvadd body#get_pos (cpv_of_polar (List.nth car.chassis whinfo2.vert)));
           space#add_body wheel1;
@@ -180,8 +171,6 @@ module RealWorld = struct
           wheelshape2#set_friction 1.0;
           wheelshape1#set_layers (mask_offset 2 i);
           wheelshape2#set_layers (mask_offset 4 i);
-          print_int (wheelshape1#get_layers); print_endline " wheel layer";
-          (* wheelshape1#set_elasticity 0.0; *)
           space#add_shape wheelshape1; 
           space#add_shape wheelshape2;
           car_list := { chassis = body; wheel1 = wheel1; wheel2 = wheel2 }::(!car_list)
@@ -214,14 +203,14 @@ module RealWorld = struct
     (* wheel2#set_torque (wheel1#get_torque); *)
     (* print_float (wheel1#get_torque); print_endline (" torque "); *)
     (* chassis#set_torque (chassis#get_torque -. torque); *)
-    wheel1#set_a_vel (~-.50.0);
-    wheel2#set_a_vel (~-.50.0);
+    wheel1#set_a_vel (~-.20.0);
+    wheel2#set_a_vel (~-.20.0);
     (* chassis#set_a_vel (~-. 10.0); *)
     (* chassis#set_force (cpv 50.0 (0.0)); *)
     {wheel1 = wheel1; wheel2 = wheel2; chassis = chassis}::step_cars xs'
 
   let step world = 
-    let substeps = 10 in
+    let substeps = 100 in
     let dt = (1.0 /. 60.0) /. (float substeps) in
     for i=0 to pred substeps do
       let cars = step_cars world.cars in
@@ -257,7 +246,9 @@ module RealWorld = struct
     List.rev (get_cars t.cars)
 
   (* TODO: Dummy implementation *)
-  let with_terrain terr pop = make pop
+  let with_terrain terr pop = 
+    let new_pop = make pop in 
+    {new_pop with terrain = {new_pop.terrain with points = terr}}
 end
 module World = RealWorld
 
