@@ -69,6 +69,8 @@ The mutation rate should be in the range (0.0, 1.0) exclusive";
   let v = (float_of_string line) in 
   config := {!config with scale = v});
   print_endline "Please enter a gravity scale (or enter for standard 1.0)";
+  print_string "> ";
+  flush stdout;
   let line = input_line stdin in 
   (if line <> "" then
   let v = (float_of_string line) in 
