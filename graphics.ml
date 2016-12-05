@@ -284,7 +284,7 @@ module Graphics = struct
   (* This function was adapted from code in the OCaml Chipmunk Moon Buggy Demo 
    * https://github.com/fccm/ocaml-chipmunk-trunk/blob/master/demos/moon_buggy.ml
    *)
-  let init () = 
+  let init scale = 
     (* Initialize with no arguments to Glut *)
     let args = Array.make 0 "" in
     ignore(glutInit args);
@@ -316,6 +316,7 @@ module Graphics = struct
             ((float_of_int window_height) /. -2.0) 
             ((float_of_int window_height) /. 2.0) 
             (-1.0) (1.0);
+    glScale scale scale scale;
     glMatrixMode GL_MODELVIEW;
   ;;
      

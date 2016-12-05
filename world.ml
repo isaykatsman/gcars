@@ -29,6 +29,7 @@ let mask_offset v car_n =
 
 let body_density = 1.0
 let wheel_density = 0.5
+let car_vel = ref (~-. 10.0)
 
 module RealWorld = struct
   let cpv_zero = cpvzero ()
@@ -63,12 +64,34 @@ module RealWorld = struct
       else
         let prev_v::t = terr.points in
         let angle = 
+          match eval_func with 
+          | `LongestDistance | `ShortestTime ->
+            if (len - n) < 10 then
+              (-. (pi /. 2.0))
+            else if (len - n) < 30 then
+              0.0
+            else
+              (Random.float pi /. smoothness) -. (pi /. (smoothness*.2.0)) 
+          | `JumpDistance -> 
           if (len - n) < 10 then
-            (-. (pi /. 2.0))
-          else if (len - n) < 30 then
-            0.0
-          else
-            (Random.float pi /. smoothness) -. (pi /. (smoothness*.2.0)) in
+              (-. (pi /. 2.0))
+            else if (len - n) < 40 then
+              ~-.0.2
+            else if (len - n) < 48 then
+              0.75 -. (48.0 -. float_of_int (len-n))*.0.1
+            else if (len - n) < 60 then 
+              (-. (pi /. 2.0))
+            else if (len-n) mod 20 < 8 then
+              (-. (pi /. 2.0))
+            else if (len-n) mod 20 < 12 then
+              0.0
+            else if (len-n) mod 20 < 20 then 
+              (pi /. 2.0)
+            else
+              0.0
+
+        in
+
 
         let v = Vect.rot (Vect.make 50.0 0.0) angle in
         let new_v = Vect.add v prev_v in
@@ -89,6 +112,7 @@ module RealWorld = struct
     match eval_func with
     | `LongestDistance -> make_terrain_inner len empty_terrain 1.5
     | `ShortestTime -> make_terrain_inner len empty_terrain 10.0
+    | `JumpDistance -> make_terrain_inner len empty_terrain 1.0 
 
   let cpv_of_polar (r, theta) =
     let x = r *. cos(theta) in
@@ -195,11 +219,12 @@ module RealWorld = struct
     | Empty n -> failwith "make_cars with Empty not implemented"
   ;;
 
-  let make pop eval_func =
+  let make pop eval_func vel=
+    car_vel := (~-. vel);
     let space = new cp_space in
     init_chipmunk ();
     space#set_gravity (cpv 0.0 (-980.0)); 
-    let terr = make_terrain 1000 space eval_func in
+    let terr = make_terrain 10000 space eval_func in
     let cars = make_cars space pop in
     { cars = cars; space = space; terrain = terr }
 
@@ -212,15 +237,13 @@ module RealWorld = struct
     chassis#reset_forces;
     wheel1#reset_forces;
     wheel2#reset_forces;
-    let max_w = -100.0 in
-    let torque = 60000.0 *. (min 1.0 ((wheel1#get_a_vel -. 1.0 *. max_w) /. max_w)) in 
     (* print_float torque; print_endline (" intended torque"); *)
     (* wheel1#set_torque (wheel1#get_torque +. torque); *)
     (* wheel2#set_torque (wheel1#get_torque); *)
     (* print_float (wheel1#get_torque); print_endline (" torque "); *)
     (* chassis#set_torque (chassis#get_torque -. torque); *)
-    wheel1#set_a_vel (~-.20.0);
-    wheel2#set_a_vel (~-.20.0);
+    wheel1#set_a_vel !car_vel;
+    wheel2#set_a_vel !car_vel;
     (* chassis#set_a_vel (~-. 10.0); *)
     (* chassis#set_force (cpv 50.0 (0.0)); *)
     {wheel1 = wheel1; wheel2 = wheel2; chassis = chassis}::step_cars xs'

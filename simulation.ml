@@ -13,7 +13,9 @@ open Printf
 type sim_options = {
   mutation_rate : float;
   num_cars : int;
-  eval_func : [`LongestDistance | `ShortestTime];
+  eval_func : [`LongestDistance | `ShortestTime | `JumpDistance];
+  car_vel : float;
+  scale : float;
 }
 
 module type Simulation = sig
@@ -60,7 +62,7 @@ module Simulation = struct
 
   let make opts = 
     let pop = Genetic.new_population (Empty opts.num_cars) [] opts.mutation_rate in 
-    let world = World.make pop (opts.eval_func) in
+    let world = World.make pop opts.eval_func opts.car_vel in
     let course_end = terr_max_x (World.get_terrain world) in
     { pop = pop; world = world; 
       graphics = Graphics.make pop;
@@ -106,8 +108,9 @@ module Simulation = struct
                               progress lists are not the same length" 
     in
     match sim.opts.eval_func with
-    | `LongestDistance -> update_prog_inner sim states progress []
+    |`JumpDistance | `LongestDistance -> update_prog_inner sim states progress []
     | `ShortestTime -> if !sim_time mod 500 = 0 then (sim_time := 1; List.map (fun x -> {x with dead = true}) progress) else (sim_time := !sim_time + 1; progress)
+    
 
  
   (* This function will check if the evaluation of a generation is done (all
@@ -126,7 +129,7 @@ module Simulation = struct
   (* Score the generation *)
   let score_gen sim eval_f =
     match eval_f with
-    | `ShortestTime -> List.map (fun x -> Vect.x (x.pos)) (World.get_car_state sim.world)
+    `JumpDistance | `ShortestTime -> List.map (fun x -> Vect.x (x.pos)) (World.get_car_state sim.world)
     | `LongestDistance -> 
       List.map (fun x -> x.greatest_x) sim.progress
 
@@ -160,7 +163,7 @@ module Simulation = struct
 
   let run sim = 
     (* Must be called for graphics to work *)
-    Graphics.init ();
+    Graphics.init (sim.opts.scale);
 
     (* Register the display callback *)
     let sim_ref = ref sim in
