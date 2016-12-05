@@ -252,7 +252,7 @@ module Graphics = struct
       if (List.length prev_max_scores) >= 2 then 
         draw_polyline graph_line 0.0 Vect.origin; in
   
-    let curr_gen = string_of_int ((List.length prev_max_scores) + 1) in
+    let curr_gen = string_of_int ((List.length prev_max_scores)) in
     let num_cars_str = string_of_int num_cars in
     let mut_rate_str = string_of_float mutation_rate in
 
